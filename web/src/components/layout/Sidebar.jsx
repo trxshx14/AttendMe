@@ -8,15 +8,15 @@ const Sidebar = ({ currentPage, onPageChange }) => {
   const navigate = useNavigate();
 
   const teacherNav = [
-    { id: 'dashboard', icon: '🏠', label: 'Dashboard', path: '/dashboard' },
-    { id: 'take-attendance', icon: '✏️', label: 'Take Attendance', path: '/take-attendance' },
-    { id: 'history', icon: '📋', label: 'Attendance History', path: '/history' },
-    { id: 'reports', icon: '📊', label: 'Reports', path: '/reports' },
+    
   ];
 
   const adminNav = [
     ...teacherNav,
-    { id: 'users', icon: '👥', label: 'Manage Users', path: '/users' },
+    { id: 'dashboard', icon: '🏠', label: 'Dashboard', path: '/admin/dashboard' },
+    { id: 'manage-classes', icon: '✏️', label: 'Manage Classes', path: '/admin/classes' },
+    { id: 'manage-users', icon: '👥', label: 'Manage Users', path: '/admin/users' },
+    { id: 'reports', icon: '📊', label: 'Reports', path: '/admin/reports' },
   ];
 
   const nav = user?.role === 'admin' ? adminNav : teacherNav;
