@@ -2,7 +2,6 @@ package com.attendme.service.impl;
 
 import com.attendme.dto.requestdto.LoginRequest;
 import com.attendme.dto.requestdto.RegisterRequest;
-import com.attendme.dto.requestdto.RefreshTokenRequest;
 import com.attendme.dto.response.JwtResponse;
 import com.attendme.dto.response.UserResponse;
 import com.attendme.entity.User;
@@ -12,59 +11,127 @@ import com.attendme.repository.UserRepository;
 import com.attendme.security.JwtUtils;
 import com.attendme.service.AuthService;
 import com.attendme.service.UserService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
-@Transactional
 public class AuthServiceImp implements AuthService {
 
-    private final AuthenticationManager authenticationManager;
-    private final UserService userService;
-    private final UserRepository userRepository;
-    private final JwtUtils jwtUtils;
+    @Autowired(required = false)
+    private AuthenticationManager authenticationManager;
     
+    @Autowired
+    private UserService userService;
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired(required = false)
+    private JwtUtils jwtUtils;
 
     @Override
     public JwtResponse login(LoginRequest request) {
+        System.out.println("========== AUTH SERVICE LOGIN ==========");
+        System.out.println("1. Login attempt for username: '" + request.getUsername() + "'");
+        System.out.println("2. Password length: " + (request.getPassword() != null ? request.getPassword().length() : 0));
+        
+        // Check if AuthenticationManager is null
+        if (authenticationManager == null) {
+            System.err.println("❌ AuthenticationManager is NULL!");
+            System.err.println("   Check if SecurityConfig is properly configured");
+        } else {
+            System.out.println("✅ AuthenticationManager is present");
+        }
+        
+        // Check if JwtUtils is null
+        if (jwtUtils == null) {
+            System.err.println("❌ JwtUtils is NULL!");
+        } else {
+            System.out.println("✅ JwtUtils is present");
+        }
+        
+        // Check if user exists in database
         try {
+            User user = userRepository.findByUsername(request.getUsername()).orElse(null);
+            if (user == null) {
+                System.err.println("❌ User NOT found in database: " + request.getUsername());
+                System.err.println("   Check if users table has data");
+            } else {
+                System.out.println("✅ User found in database:");
+                System.out.println("   - ID: " + user.getUserId());
+                System.out.println("   - Username: " + user.getUsername());
+                System.out.println("   - Email: " + user.getEmail());
+                System.out.println("   - Role: " + user.getRole());
+                System.out.println("   - Password Hash: " + user.getPasswordHash().substring(0, 20) + "...");
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Database error: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        // Try to authenticate
+        try {
+            System.out.println("3. Attempting authentication...");
+            
+            if (authenticationManager == null) {
+                throw new IllegalStateException("AuthenticationManager is not configured");
+            }
             
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
             );
             
+            System.out.println("4. Authentication successful!");
+            System.out.println("   - Authenticated: " + authentication.isAuthenticated());
+            System.out.println("   - Principal: " + authentication.getPrincipal());
+            
             SecurityContextHolder.getContext().setAuthentication(authentication);
             
+            if (jwtUtils == null) {
+                throw new IllegalStateException("JwtUtils is not configured");
+            }
             
             String jwt = jwtUtils.generateJwtToken(authentication);
-            
+            System.out.println("5. JWT generated successfully");
             
             User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "username", request.getUsername()));
             
-            
             userService.updateLastLogin(user.getUsername());
+            System.out.println("6. Last login updated");
             
-            
-            String refreshToken = "";
+            System.out.println("✅ Login completed successfully!");
             
             return new JwtResponse(
                 jwt,
-                refreshToken,
+                "dummy-refresh-token",
                 user.getUserId(),
                 user.getUsername(),
                 user.getEmail(),
                 user.getRole().name()
             );
-        } catch (Exception e) {
+            
+        } catch (BadCredentialsException e) {
+            System.err.println("❌ Bad credentials: " + e.getMessage());
             throw new UnauthorizedException("Invalid username or password");
+        } catch (UsernameNotFoundException e) {
+            System.err.println("❌ Username not found: " + e.getMessage());
+            throw new ResourceNotFoundException("User", "username", request.getUsername());
+        } catch (IllegalStateException e) {
+            System.err.println("❌ Configuration error: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Server configuration error: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("❌ Unexpected error: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Unexpected error: " + e.getMessage());
         }
     }
 
@@ -74,99 +141,14 @@ public class AuthServiceImp implements AuthService {
     }
 
     @Override
-    public JwtResponse refreshToken(RefreshTokenRequest request) {
-        // To be implemented with RefreshTokenService
-        // This will validate the refresh token and generate a new access token
-        
-        /*
-        RefreshToken refreshToken = refreshTokenService.findByToken(request.getRefreshToken())
-            .orElseThrow(() -> new ResourceNotFoundException("Refresh Token not found"));
-        
-        refreshTokenService.verifyExpiration(refreshToken);
-        
-        User user = refreshToken.getUser();
-        String newAccessToken = jwtUtils.generateTokenFromUsername(user.getUsername());
-        
-        return new JwtResponse(
-            newAccessToken,
-            request.getRefreshToken(),
-            user.getUserId(),
-            user.getUsername(),
-            user.getEmail(),
-            user.getRole().name()
-        );
-        */
-        
-        throw new UnsupportedOperationException("Refresh token functionality not implemented yet");
-    }
-
-    @Override
-    public void logout(String refreshToken) {
-        // To be implemented with RefreshTokenService
-        // This will invalidate the refresh token
-        
-        /*
-        refreshTokenService.deleteByToken(refreshToken);
-        */
-        
-        // Also clear security context
-        SecurityContextHolder.clearContext();
-    }
-
-    @Override
-    public JwtResponse googleLogin(String idToken) {
-        // To be implemented with Google OAuth
-        // This will verify the Google token and create/login user
-        
-        /*
-        // 1. Verify Google token
-        GoogleIdToken.Payload payload = verifier.verify(idToken);
-        
-        // 2. Extract user info
-        String email = payload.getEmail();
-        String name = (String) payload.get("name");
-        String googleId = payload.getSubject();
-        
-        // 3. Find or create user
-        User user = userRepository.findByGoogleId(googleId)
-            .orElseGet(() -> {
-                // Create new user with Google info
-                RegisterRequest registerRequest = new RegisterRequest();
-                registerRequest.setUsername(email.split("@")[0]);
-                registerRequest.setEmail(email);
-                registerRequest.setFullName(name);
-                registerRequest.setPassword("GOOGLE_AUTH"); // Random password
-                registerRequest.setRole("TEACHER");
-                
-                UserResponse userResponse = userService.registerUser(registerRequest);
-                return userRepository.findById(userResponse.getUserId()).get();
-            });
-        
-        // 4. Generate JWT
-        String jwt = jwtUtils.generateTokenFromUsername(user.getUsername());
-        String refreshToken = refreshTokenService.createRefreshToken(user.getUserId());
-        
-        return new JwtResponse(
-            jwt,
-            refreshToken,
-            user.getUserId(),
-            user.getUsername(),
-            user.getEmail(),
-            user.getRole().name()
-        );
-        */
-        
-        throw new UnsupportedOperationException("Google login not implemented yet");
-    }
-    
-    // Helper method to get current authenticated user
-    public User getCurrentUser() {
+    public UserResponse getCurrentUser() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         
         if (principal instanceof UserDetails) {
             String username = ((UserDetails) principal).getUsername();
-            return userRepository.findByUsername(username)
+            User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
+            return UserResponse.fromUser(user);
         }
         
         throw new UnauthorizedException("No authenticated user found");

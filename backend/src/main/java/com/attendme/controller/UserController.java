@@ -1,11 +1,10 @@
 package com.attendme.controller;
 
-import com.attendme.dto.requestdto.UserUpdateRequest;
 import com.attendme.dto.response.ApiResponse;
+import com.attendme.dto.requestdto.UserUpdateRequest;
 import com.attendme.dto.response.UserResponse;
 import com.attendme.service.UserService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -14,99 +13,99 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
-@RequiredArgsConstructor
 public class UserController {
 
-    private final UserService userService;
+    @Autowired
+    private UserService userService;
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers() {
-        List<UserResponse> responses = userService.getAllUsers();
-        return ResponseEntity.ok(ApiResponse.success("Users retrieved successfully", responses));
+        try {
+            List<UserResponse> users = userService.getAllUsers();
+            return ResponseEntity.ok(ApiResponse.success("Users retrieved successfully", users));
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(ApiResponse.error("Failed to retrieve users: " + e.getMessage()));
+        }
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @userSecurity.isCurrentUser(#id)")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UserResponse>> getUserById(@PathVariable Long id) {
-        UserResponse response = userService.getUserById(id);
-        return ResponseEntity.ok(ApiResponse.success("User found", response));
-    }
-
-    @GetMapping("/username/{username}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<UserResponse>> getUserByUsername(@PathVariable String username) {
-        UserResponse response = userService.getUserByUsername(username);
-        return ResponseEntity.ok(ApiResponse.success("User found", response));
-    }
-
-    @GetMapping("/email/{email}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<UserResponse>> getUserByEmail(@PathVariable String email) {
-        UserResponse response = userService.getUserByEmail(email);
-        return ResponseEntity.ok(ApiResponse.success("User found", response));
+        try {
+            UserResponse user = userService.getUserById(id);
+            return ResponseEntity.ok(ApiResponse.success("User found", user));
+        } catch (Exception e) {
+            return ResponseEntity.status(404)
+                    .body(ApiResponse.error("User not found: " + e.getMessage()));
+        }
     }
 
     @GetMapping("/role/{role}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<UserResponse>>> getUsersByRole(@PathVariable String role) {
-        List<UserResponse> responses = userService.getUsersByRole(role);
-        return ResponseEntity.ok(ApiResponse.success("Users by role retrieved", responses));
-    }
-
-    @GetMapping("/teachers/with-classes")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<UserResponse>>> getTeachersWithClasses() {
-        List<UserResponse> responses = userService.getTeachersWithClasses();
-        return ResponseEntity.ok(ApiResponse.success("Teachers with classes retrieved", responses));
+        try {
+            List<UserResponse> users = userService.getUsersByRole(role);
+            return ResponseEntity.ok(ApiResponse.success("Users by role retrieved", users));
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(ApiResponse.error("Failed to retrieve users: " + e.getMessage()));
+        }
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @userSecurity.isCurrentUser(#id)")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UserResponse>> updateUser(
             @PathVariable Long id,
-            @Valid @RequestBody UserUpdateRequest request) {
-        UserResponse response = userService.updateUser(id, request);
-        return ResponseEntity.ok(ApiResponse.success("User updated successfully", response));
+            @RequestBody UserUpdateRequest request) {
+        try {
+            UserResponse user = userService.updateUser(id, request);
+            return ResponseEntity.ok(ApiResponse.success("User updated successfully", user));
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.error("Failed to update user: " + e.getMessage()));
+        }
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
-        return ResponseEntity.ok(ApiResponse.success("User deleted successfully", null));
+        try {
+            userService.deleteUser(id);
+            return ResponseEntity.ok(ApiResponse.success("User deleted successfully", null));
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.error("Failed to delete user: " + e.getMessage()));
+        }
     }
 
     @PatchMapping("/{id}/activate")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UserResponse>> activateUser(@PathVariable Long id) {
-        UserResponse response = userService.activateUser(id);
-        return ResponseEntity.ok(ApiResponse.success("User activated successfully", response));
+        try {
+            UserResponse user = userService.activateUser(id);
+            return ResponseEntity.ok(ApiResponse.success("User activated successfully", user));
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.error("Failed to activate user: " + e.getMessage()));
+        }
     }
 
     @PatchMapping("/{id}/deactivate")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UserResponse>> deactivateUser(@PathVariable Long id) {
-        UserResponse response = userService.deactivateUser(id);
-        return ResponseEntity.ok(ApiResponse.success("User deactivated successfully", response));
+        try {
+            UserResponse user = userService.deactivateUser(id);
+            return ResponseEntity.ok(ApiResponse.success("User deactivated successfully", user));
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.error("Failed to deactivate user: " + e.getMessage()));
+        }
     }
 
-    @GetMapping("/search")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<UserResponse>>> searchUsers(@RequestParam String q) {
-        
-        return ResponseEntity.ok(ApiResponse.success("Search results", List.of()));
-    }
-
-    @GetMapping("/check-username/{username}")
-    public ResponseEntity<ApiResponse<Boolean>> checkUsernameExists(@PathVariable String username) {
-        boolean exists = userService.existsByUsername(username);
-        return ResponseEntity.ok(ApiResponse.success("Username check completed", exists));
-    }
-
-    @GetMapping("/check-email/{email}")
-    public ResponseEntity<ApiResponse<Boolean>> checkEmailExists(@PathVariable String email) {
-        boolean exists = userService.existsByEmail(email);
-        return ResponseEntity.ok(ApiResponse.success("Email check completed", exists));
-    }
+    @GetMapping("/test")
+public String test() {
+    return "UserController is working!";
+}
 }
