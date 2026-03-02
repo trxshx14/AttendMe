@@ -15,7 +15,7 @@ const Sidebar = ({ currentPage, onPageChange }) => {
     ...teacherNav,
     { id: 'dashboard', icon: '🏠', label: 'Dashboard', path: '/admin/dashboard' },
     { id: 'manage-classes', icon: '✏️', label: 'Manage Classes', path: '/admin/classes' },
-    { id: 'manage-users', icon: '👥', label: 'Manage Users', path: '/admin/users' },
+    { id: 'manage-users', icon: '👥', label: 'Manage Teachers', path: '/admin/users' },
     { id: 'reports', icon: '📊', label: 'Reports', path: '/admin/reports' },
   ];
 
