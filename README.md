@@ -52,6 +52,6 @@ Built with a powerful full-stack architecture using React, Spring Boot, and Kotl
 
 # 👩‍💻 Developed By
 
-Trisha Raye V. Cararag
-BSIT Student
+* Trisha Raye V. Cararag
+* BSIT Student
 
