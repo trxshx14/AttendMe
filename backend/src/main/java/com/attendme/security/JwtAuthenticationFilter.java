@@ -10,12 +10,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -24,9 +27,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private JwtUtils jwtUtils;
     
     @Autowired
-    private UserDetailsServiceImpl userDetailsService;
+    private UserDetailsService userDetailsService;
 
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+    
+    // ADD THIS LIST OF PUBLIC ENDPOINTS
+    private static final List<String> PUBLIC_ENDPOINTS = Arrays.asList(
+        "/api/auth/",
+        "/api/test/",
+        "/api/test-auth/",
+        "/api/users/ping",
+        "/api/users/test",
+        "/simple-test",
+        "/api/users"
+    );
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -35,7 +49,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         logger.debug("Processing request: {}", path);
         
-        // Always try to parse JWT, even for public endpoints
+        // ADD THIS CHECK - Skip filter for public endpoints
+        if (isPublicEndpoint(path)) {
+            logger.debug("Public endpoint, skipping JWT filter");
+            filterChain.doFilter(request, response);
+            return;
+        }
+        
+        // Always try to parse JWT for protected endpoints
         try {
             String jwt = parseJwt(request);
             logger.debug("JWT token present: {}", jwt != null);
@@ -59,6 +80,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    // ADD THIS METHOD
+    private boolean isPublicEndpoint(String path) {
+        return PUBLIC_ENDPOINTS.stream().anyMatch(path::startsWith);
     }
 
     private String parseJwt(HttpServletRequest request) {

@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import com.fasterxml.jackson.annotation.JsonIgnore;  // ADD THIS IMPORT
+import com.fasterxml.jackson.annotation.JsonProperty; // ADD THIS IMPORT
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -56,14 +58,15 @@ public class User {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
     
-
+    @JsonIgnore  // ADD THIS - prevents serialization of classes
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<SchoolClass> classes = new ArrayList<>();
     
+    @JsonIgnore  // ADD THIS - prevents serialization of refreshTokens
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<RefreshToken> refreshTokens = new ArrayList<>();
     
-
+    @JsonProperty("isActive")  // ADD THIS - ensures proper JSON naming
     public Boolean getIsActive() {
         return isActive;
     }

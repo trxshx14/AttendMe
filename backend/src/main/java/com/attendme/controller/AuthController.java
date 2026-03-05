@@ -1,4 +1,4 @@
-package com.attendme;
+package com.attendme.controller;
 
 import com.attendme.dto.requestdto.LoginRequest;
 import com.attendme.dto.requestdto.RegisterRequest;  // Add this import
@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 public class AuthController {
 
     @Autowired

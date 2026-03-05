@@ -18,17 +18,31 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers() {
-        try {
-            List<UserResponse> users = userService.getAllUsers();
-            return ResponseEntity.ok(ApiResponse.success("Users retrieved successfully", users));
-        } catch (Exception e) {
-            return ResponseEntity.status(500)
-                    .body(ApiResponse.error("Failed to retrieve users: " + e.getMessage()));
-        }
+
+    public UserController() {
+        System.out.println("🎯🎯🎯 UserController INSTANTIATED! 🎯🎯🎯");
     }
+
+    @GetMapping("/ping")
+    public String ping() {
+        return "UserController is working!";
+    }
+
+@GetMapping
+// @PreAuthorize("hasRole('ADMIN')")
+public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers() {
+    System.out.println("========== GET /api/users ==========");
+    try {
+        List<UserResponse> users = userService.getAllUsers();
+        System.out.println("✅ Found " + users.size() + " users");
+        return ResponseEntity.ok(ApiResponse.success("Users retrieved successfully", users));
+    } catch (Exception e) {
+        System.err.println("❌ ERROR: " + e.getMessage());
+        e.printStackTrace(); // This will show the full error
+        return ResponseEntity.status(500)
+                .body(ApiResponse.error("Failed to retrieve users: " + e.getMessage()));
+    }
+}
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -43,7 +57,7 @@ public class UserController {
     }
 
     @GetMapping("/role/{role}")
-    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     public ResponseEntity<ApiResponse<List<UserResponse>>> getUsersByRole(@PathVariable String role) {
         try {
             List<UserResponse> users = userService.getUsersByRole(role);
