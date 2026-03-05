@@ -9,11 +9,13 @@ import com.attendme.entity.Role;
 import com.attendme.exception.DuplicateResourceException;
 import com.attendme.exception.ResourceNotFoundException;
 import com.attendme.repository.SchoolClassRepository;
+import com.attendme.repository.StudentRepository;
 import com.attendme.repository.UserRepository;
 import com.attendme.service.SchoolClassService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,6 +27,7 @@ public class SchoolClassServiceImpl implements SchoolClassService {
     
     private final SchoolClassRepository schoolClassRepository;
     private final UserRepository userRepository;
+    private final StudentRepository studentRepository;
     
     @Override
     public SchoolClassResponse createClass(SchoolClassRequest request) {
@@ -138,10 +141,24 @@ public class SchoolClassServiceImpl implements SchoolClassService {
     }
     
     @Override
-    public List<StudentResponse> getStudentsInClass(Long classId) {
-        
-        return List.of();
-    }
+public List<StudentResponse> getStudentsInClass(Long classId) {
+    findClassById(classId); // validates class exists
+    return studentRepository.findBySchoolClass_ClassId(classId).stream()
+            .map(student -> StudentResponse.builder()
+                    .studentId(student.getStudentId())
+                    .rollNumber(student.getRollNumber())
+                    .firstName(student.getFirstName())
+                    .lastName(student.getLastName())
+                    .fullName(student.getFullName())
+                    .email(student.getEmail())
+                    .phone(student.getPhone())
+                    .classId(classId)
+                    .className(student.getSchoolClass().getClassName())
+                    .createdAt(student.getCreatedAt())
+                    .updatedAt(student.getUpdatedAt())
+                    .build())
+            .collect(Collectors.toList());
+}
     
     @Override
     public Long getStudentCountInClass(Long classId) {
