@@ -1,57 +1,79 @@
-# 📚 AttendMe
+📚 AttendMe
 Smart Attendance Management System for Schools
 
-AttendMe is a modern, role-based attendance management system designed to help schools efficiently track, manage, and monitor student attendance. It eliminates manual paper-based tracking and provides a secure, real-time digital solution for administrators and teachers.
+AttendMe is a modern role-based attendance management system designed to help schools efficiently track, manage, and monitor student attendance.
 
-Built with a powerful full-stack architecture using React, Spring Boot, and Kotlin (Android), AttendMe ensures reliability, scalability, and a seamless user experience across web and mobile platforms.
+The system eliminates traditional paper-based attendance tracking and replaces it with a secure, real-time digital solution for teachers and administrators.
 
-# 🎯 Project Goals
+Built with a powerful full-stack architecture, AttendMe integrates web and mobile platforms to ensure reliability, scalability, and a seamless user experience.
 
-* Replace manual attendance logs
+🎯 Project Goals
 
-* Improve attendance accuracy
+The main goals of the system are to:
 
-* Provide secure role-based access
+Replace manual attendance logs
 
-* Enable digital reporting
+Improve attendance accuracy
 
-* Support both web and mobile platforms
+Provide secure role-based access control
 
-# 🚀 Tech Stack: 
-## Frontend (Web)
+Enable digital reporting and analytics
 
-⚛ React.js
+Support both web and mobile platforms
 
-* Axios (API communication)
+🛠️ Tech Stack
+Frontend
 
-* React Router
+React
 
-* Responsive UI Design
+Backend
 
-## Backend
+Spring Boot
 
-* Spring Boot
+Mobile Application
 
-* JWT Authentication
+Kotlin (Android Studio)
 
-* JPA / Hibernate
+Database
 
-* RESTful API Architecture
+MySQL
 
-* MySQL / PostgreSQL (configurable)
+Supabase
 
- ## Mobile Application 
+Deployment
 
-* Kotlin
+Render
 
-* Android Studio
+Version Control
 
-* Retrofit (API calls)
+Git
 
-* Material Design Components
+GitHub
 
-# 👩‍💻 Developed By
+⚙️ System Features
+👨‍🏫 Teacher
 
-* Trisha Raye V. Cararag
-* BSIT Student
+Record student attendance
 
+View attendance history
+
+Generate attendance reports
+
+🏫 Admin
+
+Manage users (teachers and students)
+
+Monitor attendance records
+
+Access reports and analytics
+
+📱 Mobile Support
+
+Android application for attendance management
+
+Synchronization with the web system
+
+👩‍💻 Developer
+
+Trisha Raye V. Cararag
+BS Information Technology (BSIT)
