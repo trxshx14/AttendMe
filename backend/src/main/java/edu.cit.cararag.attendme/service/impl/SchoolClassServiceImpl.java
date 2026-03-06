@@ -1,6 +1,6 @@
 package edu.cit.cararag.attendme.service.impl;
 
-import edu.cit.cararag.attendme.dto.requestdto.SchoolClassRequest;
+import edu.cit.cararag.attendme.dto.requestdto.ClassRequest;
 import edu.cit.cararag.attendme.dto.response.SchoolClassResponse;
 import edu.cit.cararag.attendme.dto.response.StudentResponse;
 import edu.cit.cararag.attendme.entity.SchoolClass;
@@ -29,7 +29,7 @@ public class SchoolClassServiceImpl implements SchoolClassService {
     private final StudentRepository studentRepository;
 
     @Override
-    public SchoolClassResponse createClass(SchoolClassRequest request) {
+    public SchoolClassResponse createClass(ClassRequest request) {
 
         if (schoolClassRepository.existsByClassNameAndSectionAndAcademicYear(
                 request.getClassName(), request.getSection(), request.getAcademicYear())) {
@@ -44,8 +44,9 @@ public class SchoolClassServiceImpl implements SchoolClassService {
         schoolClass.setSection(request.getSection());
         schoolClass.setAcademicYear(request.getAcademicYear());
         schoolClass.setTeacher(teacher);
-        schoolClass.setScheduleDay(request.getScheduleDay());     // ✅ NEW
-        schoolClass.setScheduleTime(request.getScheduleTime());   // ✅ NEW
+        schoolClass.setScheduleDay(request.getScheduleDay());
+        schoolClass.setScheduleTime(request.getScheduleTime());
+        schoolClass.setScheduleTimeEnd(request.getScheduleTimeEnd());   // ✅ NEW
 
         SchoolClass savedClass = schoolClassRepository.save(schoolClass);
         return mapToResponse(savedClass);
@@ -80,15 +81,15 @@ public class SchoolClassServiceImpl implements SchoolClassService {
     }
 
     @Override
-    public SchoolClassResponse updateClass(Long id, SchoolClassRequest request) {
+    public SchoolClassResponse updateClass(Long id, ClassRequest request) {
         SchoolClass schoolClass = findClassById(id);
 
         if ((request.getClassName() != null && !request.getClassName().equals(schoolClass.getClassName())) ||
             (request.getSection() != null && !request.getSection().equals(schoolClass.getSection())) ||
             (request.getAcademicYear() != null && !request.getAcademicYear().equals(schoolClass.getAcademicYear()))) {
 
-            String className = request.getClassName() != null ? request.getClassName() : schoolClass.getClassName();
-            String section = request.getSection() != null ? request.getSection() : schoolClass.getSection();
+            String className    = request.getClassName()    != null ? request.getClassName()    : schoolClass.getClassName();
+            String section      = request.getSection()      != null ? request.getSection()      : schoolClass.getSection();
             String academicYear = request.getAcademicYear() != null ? request.getAcademicYear() : schoolClass.getAcademicYear();
 
             if (schoolClassRepository.existsByClassNameAndSectionAndAcademicYear(className, section, academicYear)) {
@@ -96,18 +97,19 @@ public class SchoolClassServiceImpl implements SchoolClassService {
             }
         }
 
-        if (request.getClassName() != null) schoolClass.setClassName(request.getClassName());
-        if (request.getSubject() != null) schoolClass.setSubject(request.getSubject());
-        if (request.getSection() != null) schoolClass.setSection(request.getSection());
+        if (request.getClassName()    != null) schoolClass.setClassName(request.getClassName());
+        if (request.getSubject()      != null) schoolClass.setSubject(request.getSubject());
+        if (request.getSection()      != null) schoolClass.setSection(request.getSection());
         if (request.getAcademicYear() != null) schoolClass.setAcademicYear(request.getAcademicYear());
-        if (request.getTeacherId() != null && !request.getTeacherId().equals(schoolClass.getTeacher().getUserId())) {
+        if (request.getTeacherId()    != null && !request.getTeacherId().equals(schoolClass.getTeacher().getUserId())) {
             User teacher = findTeacherById(request.getTeacherId());
             schoolClass.setTeacher(teacher);
         }
 
-        // ✅ NEW — always update schedule fields (allow clearing them too)
+        // Always update schedule fields (allow clearing to null)
         schoolClass.setScheduleDay(request.getScheduleDay());
         schoolClass.setScheduleTime(request.getScheduleTime());
+        schoolClass.setScheduleTimeEnd(request.getScheduleTimeEnd());   // ✅ NEW
 
         SchoolClass updatedClass = schoolClassRepository.save(schoolClass);
         return mapToResponse(updatedClass);
@@ -158,6 +160,8 @@ public class SchoolClassServiceImpl implements SchoolClassService {
         return schoolClassRepository.countStudentsInClass(classId);
     }
 
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
     private SchoolClass findClassById(Long id) {
         return schoolClassRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Class", "id", id));
@@ -183,8 +187,9 @@ public class SchoolClassServiceImpl implements SchoolClassService {
                 .academicYear(schoolClass.getAcademicYear())
                 .teacherId(schoolClass.getTeacher().getUserId())
                 .teacherName(schoolClass.getTeacher().getFullName())
-                .scheduleDay(schoolClass.getScheduleDay())     // ✅ NEW
-                .scheduleTime(schoolClass.getScheduleTime())   // ✅ NEW
+                .scheduleDay(schoolClass.getScheduleDay())
+                .scheduleTime(schoolClass.getScheduleTime())
+                .scheduleTimeEnd(schoolClass.getScheduleTimeEnd())   // ✅ NEW
                 .studentCount(schoolClass.getStudents() != null ? schoolClass.getStudents().size() : 0)
                 .createdAt(schoolClass.getCreatedAt())
                 .updatedAt(schoolClass.getUpdatedAt())

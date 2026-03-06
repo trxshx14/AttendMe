@@ -35,11 +35,14 @@ public class SchoolClass {
     @Column(name = "academic_year", length = 20)
     private String academicYear;
 
-    @Column(name = "schedule_day", length = 20)       // ✅ NEW
+    @Column(name = "schedule_day", length = 20)
     private String scheduleDay;
 
-    @Column(name = "schedule_time", length = 10)      // ✅ NEW
+    @Column(name = "schedule_time", length = 10)
     private String scheduleTime;
+
+    @Column(name = "schedule_time_end", length = 10)  // ✅ NEW
+    private String scheduleTimeEnd;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "teacher_id", nullable = false)

@@ -1,6 +1,6 @@
 package edu.cit.cararag.attendme.controller;
 
-import edu.cit.cararag.attendme.dto.requestdto.SchoolClassRequest;
+import edu.cit.cararag.attendme.dto.requestdto.ClassRequest;
 import edu.cit.cararag.attendme.dto.response.ApiResponse;
 import edu.cit.cararag.attendme.dto.response.SchoolClassResponse;
 import edu.cit.cararag.attendme.dto.response.StudentResponse;
@@ -23,7 +23,7 @@ public class SchoolClassController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
-    public ResponseEntity<ApiResponse<SchoolClassResponse>> createClass(@Valid @RequestBody SchoolClassRequest request) {
+    public ResponseEntity<ApiResponse<SchoolClassResponse>> createClass(@Valid @RequestBody ClassRequest request) {
         SchoolClassResponse response = schoolClassService.createClass(request);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -62,7 +62,7 @@ public class SchoolClassController {
     @PreAuthorize("hasRole('ADMIN') or @classSecurity.isTeacherOfClass(#id)")
     public ResponseEntity<ApiResponse<SchoolClassResponse>> updateClass(
             @PathVariable Long id,
-            @Valid @RequestBody SchoolClassRequest request) {
+            @Valid @RequestBody ClassRequest request) {
         SchoolClassResponse response = schoolClassService.updateClass(id, request);
         return ResponseEntity.ok(ApiResponse.success("Class updated successfully", response));
     }
