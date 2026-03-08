@@ -67,7 +67,7 @@ public class AttendanceController {
     }
 
     @GetMapping("/class/{classId}/date/{date}")
-    @PreAuthorize("hasRole('ADMIN') or @classSecurity.isTeacherOfClass(#classId)")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     public ResponseEntity<ApiResponse<List<AttendanceResponse>>> getAttendanceByClassAndDate(
             @PathVariable Long classId,
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
@@ -86,7 +86,7 @@ public class AttendanceController {
     }
 
     @GetMapping("/class/{classId}/summary/{date}")
-    @PreAuthorize("hasRole('ADMIN') or @classSecurity.isTeacherOfClass(#classId)")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     public ResponseEntity<ApiResponse<Map<String, Long>>> getAttendanceSummary(
             @PathVariable Long classId,
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
@@ -95,7 +95,7 @@ public class AttendanceController {
     }
 
     @GetMapping("/class/{classId}/report/{date}")
-    @PreAuthorize("hasRole('ADMIN') or @classSecurity.isTeacherOfClass(#classId)")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     public ResponseEntity<ApiResponse<DailyReportResponse>> generateDailyReport(
             @PathVariable Long classId,
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {

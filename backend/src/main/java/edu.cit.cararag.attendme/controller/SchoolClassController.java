@@ -45,7 +45,7 @@ public class SchoolClassController {
     }
 
     @GetMapping("/teacher/{teacherId}")
-    @PreAuthorize("hasRole('ADMIN') or @classSecurity.isTeacherOfClass(#teacherId)")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     public ResponseEntity<ApiResponse<List<SchoolClassResponse>>> getClassesByTeacher(@PathVariable Long teacherId) {
         List<SchoolClassResponse> responses = schoolClassService.getClassesByTeacher(teacherId);
         return ResponseEntity.ok(ApiResponse.success("Classes by teacher retrieved", responses));
@@ -59,7 +59,7 @@ public class SchoolClassController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @classSecurity.isTeacherOfClass(#id)")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     public ResponseEntity<ApiResponse<SchoolClassResponse>> updateClass(
             @PathVariable Long id,
             @Valid @RequestBody ClassRequest request) {
@@ -75,7 +75,7 @@ public class SchoolClassController {
     }
 
     @GetMapping("/{id}/students")
-    @PreAuthorize("hasRole('ADMIN') or @classSecurity.isTeacherOfClass(#id)")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     public ResponseEntity<ApiResponse<List<StudentResponse>>> getStudentsInClass(@PathVariable Long id) {
         List<StudentResponse> responses = schoolClassService.getStudentsInClass(id);
         return ResponseEntity.ok(ApiResponse.success("Students in class retrieved", responses));
@@ -89,7 +89,7 @@ public class SchoolClassController {
     }
 
     @PostMapping("/{classId}/students/{studentId}")
-    @PreAuthorize("hasRole('ADMIN') or @classSecurity.isTeacherOfClass(#classId)")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     public ResponseEntity<ApiResponse<SchoolClassResponse>> addStudentToClass(
             @PathVariable Long classId,
             @PathVariable Long studentId) {
@@ -98,7 +98,7 @@ public class SchoolClassController {
     }
 
     @DeleteMapping("/{classId}/students/{studentId}")
-    @PreAuthorize("hasRole('ADMIN') or @classSecurity.isTeacherOfClass(#classId)")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     public ResponseEntity<ApiResponse<SchoolClassResponse>> removeStudentFromClass(
             @PathVariable Long classId,
             @PathVariable Long studentId) {
