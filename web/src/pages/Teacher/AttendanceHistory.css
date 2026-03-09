@@ -865,3 +865,24 @@
   .ah-dropdown-trigger { min-width: unset; width: 100%; }
   .ah-status-picker { grid-template-columns: 1fr 1fr; }
 }
+
+/* Subject display */
+.ah-subject-display {
+  display: flex;
+  align-items: center;
+  min-width: 140px;
+  height: 42px;
+  padding: 10px 14px;
+  background: #F4F7FB;
+  border: 1.5px solid #D6E0F0;
+  border-radius: 11px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0F2D5E;
+  letter-spacing: -0.1px;
+}
+
+.ah-subject-placeholder {
+  color: #94A3B8;
+  font-weight: 500;
+}

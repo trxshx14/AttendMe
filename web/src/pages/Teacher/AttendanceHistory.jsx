@@ -16,6 +16,35 @@ const STATUS_CONFIG = {
 
 const PAGE_SIZE = 10;
 
+/**
+ * Extracts { grade, section } from a class object.
+ * Handles all known backend shapes.
+ */
+const parseClassObj = (cls) => {
+  // Shape 1: separate gradeLevel + section fields from backend
+  if (cls.gradeLevel != null && cls.section) {
+    return { grade: `Grade ${cls.gradeLevel}`, section: cls.section };
+  }
+  if (cls.gradeLevel != null) {
+    return { grade: `Grade ${cls.gradeLevel}`, section: cls.section || null };
+  }
+  // Shape 2: section field exists, className is the grade label
+  if (cls.section) {
+    return { grade: cls.className, section: cls.section };
+  }
+  // Shape 3: parse "Grade 9Integrity" or "Grade 9 Integrity" from className
+  const match = (cls.className || '').match(/^(Grade\s*\d+)\s*(.+)$/i);
+  if (match) {
+    return { grade: match[1].trim(), section: match[2].trim() };
+  }
+  // Shape 4: className is just "Grade 9" with no section
+  const gradeOnly = (cls.className || '').match(/^(Grade\s*\d+)$/i);
+  if (gradeOnly) {
+    return { grade: gradeOnly[1].trim(), section: null };
+  }
+  return { grade: cls.className || 'Unknown', section: null };
+};
+
 const AttendanceHistory = () => {
   const [classes, setClasses]             = useState([]);
   const [records, setRecords]             = useState([]);
@@ -26,17 +55,19 @@ const AttendanceHistory = () => {
   const [totalPages, setTotalPages]       = useState(1);
 
   // Filters
-  const [selectedClass, setSelectedClass] = useState('all');
-  const [filterStatus, setFilterStatus]   = useState('all');
-  const [searchTerm, setSearchTerm]       = useState('');
-  const [dateFrom, setDateFrom]           = useState('');
-  const [dateTo, setDateTo]               = useState('');
-  const [showClassDrop, setShowClassDrop] = useState(false);
+  const [selectedGrade, setSelectedGrade]     = useState('all');   // "all" | "Grade 9"
+  const [selectedSection, setSelectedSection] = useState('all');   // "all" | classId (number)
+  const [filterStatus, setFilterStatus]       = useState('all');
+  const [searchTerm, setSearchTerm]           = useState('');
+  const [dateFrom, setDateFrom]               = useState('');
+  const [dateTo, setDateTo]                   = useState('');
+  const [showGradeDrop, setShowGradeDrop]     = useState(false);
+  const [showSectionDrop, setShowSectionDrop] = useState(false);
 
   // Edit modal
-  const [editRecord, setEditRecord]       = useState(null);
-  const [editStatus, setEditStatus]       = useState('');
-  const [editSaving, setEditSaving]       = useState(false);
+  const [editRecord, setEditRecord]   = useState(null);
+  const [editStatus, setEditStatus]   = useState('');
+  const [editSaving, setEditSaving]   = useState(false);
 
   // Delete confirm
   const [deleteId, setDeleteId]           = useState(null);
@@ -45,27 +76,70 @@ const AttendanceHistory = () => {
   const token = localStorage.getItem('accessToken');
   const user  = JSON.parse(localStorage.getItem('user') || '{}');
 
-  // All raw records fetched from backend (before client-side filtering)
   const [allRecords, setAllRecords] = useState([]);
+
+  // All unique grades — deduplicated and sorted numerically
+  const gradeOptions = (() => {
+    const seen = new Set();
+    const result = [];
+    for (const c of classes) {
+      const { grade } = parseClassObj(c);
+      const key = (grade || '').trim().toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        result.push(grade);
+      }
+    }
+    return result.sort((a, b) => {
+      const numA = parseInt((a || '').match(/\d+/)?.[0] || '0');
+      const numB = parseInt((b || '').match(/\d+/)?.[0] || '0');
+      return numA - numB;
+    });
+  })();
+
+  // Sections belonging to the selected grade (case-insensitive match)
+  const sectionOptions = selectedGrade !== 'all'
+    ? classes.filter(c => parseClassObj(c).grade?.trim().toLowerCase() === selectedGrade?.trim().toLowerCase())
+    : [];
+
+  // ── Grade / Section handlers ──────────────────────────────────────────────
+  const handleGradeSelect = (grade) => {
+    setSelectedGrade(grade);
+    setSelectedSection('all');
+    setShowGradeDrop(false);
+    setPage(1);
+  };
+
+  const handleSectionSelect = (classId) => {
+    setSelectedSection(classId);
+    setShowSectionDrop(false);
+    setPage(1);
+  };
+
+  // ── Label helpers ─────────────────────────────────────────────────────────
+  const gradeTriggerLabel = selectedGrade === 'all' ? 'All Grades' : selectedGrade;
+
+  const sectionTriggerLabel = (() => {
+    if (selectedSection === 'all') return selectedGrade === 'all' ? '— select grade first' : 'All Sections';
+    const cls = classes.find(c => c.classId === selectedSection);
+    if (!cls) return 'All Sections';
+    const { section } = parseClassObj(cls);
+    return section || cls.subject || `Class ${cls.classId}`;
+  })();
 
   useEffect(() => { fetchClasses(); }, []);
 
-  // Re-fetch raw data whenever class selection or date range changes
   useEffect(() => {
-    if (classes.length > 0 || selectedClass !== 'all') fetchRecords();
+    if (classes.length > 0) fetchRecords(classes);
     // eslint-disable-next-line
-  }, [selectedClass, dateFrom, dateTo, classes.length]);
+  }, [selectedGrade, selectedSection, dateFrom, dateTo, classes.length]);
 
-  // Re-apply filters + pagination whenever filter state or raw data changes
   useEffect(() => {
     applyFilters();
     // eslint-disable-next-line
   }, [allRecords, filterStatus, searchTerm, page]);
 
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setPage(1);
-  }, [selectedClass, filterStatus, searchTerm, dateFrom, dateTo]);
+  useEffect(() => { setPage(1); }, [selectedGrade, selectedSection, filterStatus, searchTerm, dateFrom, dateTo]);
 
   const fetchClasses = async () => {
     setClassLoading(true);
@@ -75,25 +149,28 @@ const AttendanceHistory = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (data.success) setClasses(data.data || []);
+      if (data.success) {
+        const loaded = data.data || [];
+        setClasses(loaded);
+        fetchRecords(loaded);
+      }
     } catch { setError('Failed to load classes.'); }
     finally { setClassLoading(false); }
   };
 
-  // Fetch raw attendance from available backend endpoints,
-  // then store in allRecords for client-side filtering.
-  const fetchRecords = async () => {
+  // Accept classList param to avoid stale closure — falls back to state
+  const fetchRecords = async (classList = classes) => {
+    if (!classList.length) return;
     setLoading(true);
     setError('');
     try {
-      // Resolve date range — default to current week if none selected
       const todayStr = new Date().toISOString().split('T')[0];
-      const weekStart = new Date();
-      weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
-      const from = dateFrom || weekStart.toISOString().split('T')[0];
+      // Default: last 30 days so all recent records are visible
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const from = dateFrom || thirtyDaysAgo.toISOString().split('T')[0];
       const to   = dateTo   || todayStr;
 
-      // Build list of dates in range
       const dates = [];
       let cur = new Date(from);
       const end = new Date(to);
@@ -102,12 +179,15 @@ const AttendanceHistory = () => {
         cur.setDate(cur.getDate() + 1);
       }
 
-      // Determine which classes to query
-      const classesToQuery = selectedClass !== 'all'
-        ? [{ classId: selectedClass }]
-        : classes;
+      // Resolve which classes to query using the passed-in list (avoids stale closure)
+      let classesToQuery = classList;
+      if (selectedGrade !== 'all') {
+        classesToQuery = classList.filter(c => parseClassObj(c).grade === selectedGrade);
+        if (selectedSection !== 'all') {
+          classesToQuery = classesToQuery.filter(c => c.classId === selectedSection);
+        }
+      }
 
-      // Fetch class × date combinations in parallel
       const fetches = classesToQuery.flatMap(cls =>
         dates.map(date =>
           fetch(`http://localhost:8888/api/attendance/class/${cls.classId}/date/${date}`, {
@@ -122,45 +202,48 @@ const AttendanceHistory = () => {
       const results = await Promise.all(fetches);
       let raw = results.flat();
 
-      // Normalize status to lowercase
-      raw = raw.map(r => ({ ...r, status: r.status?.toLowerCase() || 'present' }));
+      raw = raw.map(r => {
+        // API returns a single "studentName" field e.g. "Trisha Raye Cararag"
+        const fullName  = r.studentName || '';
+        const parts     = fullName.trim().split(/\s+/);
+        const firstName = parts.slice(0, -1).join(' ') || fullName;
+        const lastName  = parts.length > 1 ? parts[parts.length - 1] : '';
+
+        return {
+          ...r,
+          status:           r.status?.toLowerCase() || 'present',
+          studentFirstName: firstName,
+          studentLastName:  lastName,
+        };
+      });
 
       setAllRecords(raw);
     } catch { setError('An error occurred while loading records.'); }
     finally { setLoading(false); }
   };
 
-  // Client-side filter + paginate allRecords → records
   const applyFilters = () => {
     let filtered = [...allRecords];
 
-    if (filterStatus !== 'all') {
-      filtered = filtered.filter(r => r.status === filterStatus);
-    }
+    if (filterStatus !== 'all') filtered = filtered.filter(r => r.status === filterStatus);
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
       filtered = filtered.filter(r => {
-        const name = `${r.studentFirstName || ''} ${r.studentLastName || ''}`.toLowerCase();
-        const roll = (r.rollNumber || '').toLowerCase();
-        return name.includes(q) || roll.includes(q);
+        const name = (r.studentName || `${r.studentFirstName} ${r.studentLastName}`).toLowerCase();
+        return name.includes(q) || (r.rollNumber || '').toLowerCase().includes(q);
       });
     }
 
-    // Sort newest first
     filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    const total = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    const total    = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     setTotalPages(total);
-
     const safePage = Math.min(page, total);
     const start    = (safePage - 1) * PAGE_SIZE;
     setRecords(filtered.slice(start, start + PAGE_SIZE));
   };
 
-  const handleEdit = (record) => {
-    setEditRecord(record);
-    setEditStatus(record.status);
-  };
+  const handleEdit = (record) => { setEditRecord(record); setEditStatus(record.status); };
 
   const handleEditSave = async () => {
     if (!editRecord) return;
@@ -180,12 +263,9 @@ const AttendanceHistory = () => {
       const data = await res.json();
       if (data.success) {
         setEditRecord(null);
-        // Update in-place in allRecords so we don't need a full refetch
         setAllRecords(prev =>
           prev.map(r => r.attendanceId === editRecord.attendanceId
-            ? { ...r, status: editStatus.toLowerCase() }
-            : r
-          )
+            ? { ...r, status: editStatus.toLowerCase() } : r)
         );
       } else setError(data.message || 'Failed to update record.');
     } catch { setError('Error updating record.'); }
@@ -203,24 +283,22 @@ const AttendanceHistory = () => {
       if (data.success) {
         setDeleteConfirm(false);
         setDeleteId(null);
-        // Remove from allRecords in-place
         setAllRecords(prev => prev.filter(r => r.attendanceId !== deleteId));
       } else setError(data.message || 'Failed to delete record.');
     } catch { setError('Error deleting record.'); }
   };
 
   const clearFilters = () => {
-    setSelectedClass('all');
+    setSelectedGrade('all');
+    setSelectedSection('all');
     setFilterStatus('all');
     setSearchTerm('');
     setDateFrom('');
     setDateTo('');
   };
 
-  const hasFilters = selectedClass !== 'all' || filterStatus !== 'all' ||
-    searchTerm || dateFrom || dateTo;
-
-  const selectedClassName = classes.find(c => String(c.classId) === String(selectedClass))?.className;
+  const hasFilters = selectedGrade !== 'all' || selectedSection !== 'all' ||
+    filterStatus !== 'all' || searchTerm || dateFrom || dateTo;
 
   const formatDate = (d) => {
     if (!d) return '—';
@@ -236,9 +314,8 @@ const AttendanceHistory = () => {
           <h1 className="ah-page-title">Attendance History</h1>
           <p className="ah-page-desc">View, filter, edit, and delete past attendance records</p>
         </div>
-        <button className="ah-refresh-btn" onClick={fetchRecords} title="Refresh">
-          <RefreshCw size={15} />
-          Refresh
+        <button className="ah-refresh-btn" onClick={() => fetchRecords(classes)} title="Refresh">
+          <RefreshCw size={15} /> Refresh
         </button>
       </div>
 
@@ -269,38 +346,87 @@ const AttendanceHistory = () => {
 
         <div className="ah-filter-row">
 
-          {/* Class dropdown */}
+          {/* ── Grade Dropdown ── */}
           <div className="ah-filter-group">
-            <label className="ah-filter-label"><BookOpen size={13} /> Class</label>
+            <label className="ah-filter-label"><BookOpen size={13} /> Grade</label>
             <div className="ah-dropdown-root">
               <button
-                className={`ah-dropdown-trigger ${showClassDrop ? 'ah-open' : ''}`}
-                onClick={() => setShowClassDrop(v => !v)}
+                className={`ah-dropdown-trigger ${showGradeDrop ? 'ah-open' : ''}`}
+                onClick={() => { setShowGradeDrop(v => !v); setShowSectionDrop(false); }}
                 disabled={classLoading}
               >
-                <span>{classLoading ? 'Loading…' : (selectedClassName || 'All Classes')}</span>
+                <span>{classLoading ? 'Loading…' : gradeTriggerLabel}</span>
                 <ChevronDown size={14} className="ah-chevron" />
               </button>
-              {showClassDrop && (
+              {showGradeDrop && (
                 <div className="ah-dropdown-menu">
                   <button
-                    className={`ah-dropdown-item ${selectedClass === 'all' ? 'ah-active' : ''}`}
-                    onClick={() => { setSelectedClass('all'); setShowClassDrop(false); }}
+                    className={`ah-dropdown-item ${selectedGrade === 'all' ? 'ah-active' : ''}`}
+                    onClick={() => handleGradeSelect('all')}
                   >
-                    All Classes
+                    All Grades
                   </button>
-                  {classes.map(cls => (
+                  {gradeOptions.map(grade => (
                     <button
-                      key={cls.classId}
-                      className={`ah-dropdown-item ${String(selectedClass) === String(cls.classId) ? 'ah-active' : ''}`}
-                      onClick={() => { setSelectedClass(cls.classId); setShowClassDrop(false); }}
+                      key={grade}
+                      className={`ah-dropdown-item ${selectedGrade === grade ? 'ah-active' : ''}`}
+                      onClick={() => handleGradeSelect(grade)}
                     >
-                      <span className="ah-item-name">{cls.className}</span>
-                      <span className="ah-item-meta">{cls.subject}</span>
+                      {grade}
                     </button>
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* ── Section Dropdown ── */}
+          <div className="ah-filter-group">
+            <label className="ah-filter-label"><Filter size={13} /> Section</label>
+            <div className="ah-dropdown-root">
+              <button
+                className={`ah-dropdown-trigger ${showSectionDrop ? 'ah-open' : ''}`}
+                onClick={() => { if (selectedGrade !== 'all') { setShowSectionDrop(v => !v); setShowGradeDrop(false); } }}
+                disabled={selectedGrade === 'all' || classLoading}
+                style={selectedGrade === 'all' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+              >
+                <span>{sectionTriggerLabel}</span>
+                <ChevronDown size={14} className="ah-chevron" />
+              </button>
+              {showSectionDrop && (
+                <div className="ah-dropdown-menu">
+                  <button
+                    className={`ah-dropdown-item ${selectedSection === 'all' ? 'ah-active' : ''}`}
+                    onClick={() => handleSectionSelect('all')}
+                  >
+                    All Sections
+                  </button>
+                  {sectionOptions.map(cls => {
+                    const { section } = parseClassObj(cls);
+                    const label = section || cls.subject || `Class ${cls.classId}`;
+                    return (
+                      <button
+                        key={cls.classId}
+                        className={`ah-dropdown-item ${selectedSection === cls.classId ? 'ah-active' : ''}`}
+                        onClick={() => handleSectionSelect(cls.classId)}
+                      >
+                        <span className="ah-item-name">{label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ── Subject (read-only, derived from selected section) ── */}
+          <div className="ah-filter-group">
+            <label className="ah-filter-label"><BookOpen size={13} /> Subject</label>
+            <div className="ah-subject-display">
+              {selectedSection !== 'all'
+                ? (classes.find(c => c.classId === selectedSection)?.subject || '—')
+                : <span className="ah-subject-placeholder">—</span>
+              }
             </div>
           </div>
 
@@ -322,40 +448,24 @@ const AttendanceHistory = () => {
           {/* Date range */}
           <div className="ah-filter-group">
             <label className="ah-filter-label"><Calendar size={13} /> From</label>
-            <input
-              type="date"
-              className="ah-date-input"
-              value={dateFrom}
-              onChange={e => setDateFrom(e.target.value)}
-            />
+            <input type="date" className="ah-date-input" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
           </div>
 
           <div className="ah-filter-group">
             <label className="ah-filter-label"><Calendar size={13} /> To</label>
-            <input
-              type="date"
-              className="ah-date-input"
-              value={dateTo}
-              onChange={e => setDateTo(e.target.value)}
-            />
+            <input type="date" className="ah-date-input" value={dateTo} onChange={e => setDateTo(e.target.value)} />
           </div>
 
           {hasFilters && (
-            <button className="ah-clear-btn" onClick={clearFilters}>
-              <X size={13} /> Clear
-            </button>
+            <button className="ah-clear-btn" onClick={clearFilters}><X size={13} /> Clear</button>
           )}
         </div>
       </div>
 
       {/* ── Table Panel ─────────────────────────────── */}
       <div className="ah-table-panel">
-
         {loading ? (
-          <div className="ah-loading">
-            <div className="ah-spinner" />
-            <p>Loading records…</p>
-          </div>
+          <div className="ah-loading"><div className="ah-spinner" /><p>Loading records…</p></div>
         ) : records.length === 0 ? (
           <div className="ah-empty">
             <div className="ah-empty-icon"><Users size={38} /></div>
@@ -379,7 +489,7 @@ const AttendanceHistory = () => {
                 </thead>
                 <tbody>
                   {records.map((rec, idx) => {
-                    const cfg = STATUS_CONFIG[rec.status] || STATUS_CONFIG.present;
+                    const cfg  = STATUS_CONFIG[rec.status] || STATUS_CONFIG.present;
                     const Icon = cfg.icon;
                     return (
                       <tr key={rec.attendanceId} style={{ animationDelay: `${idx * 25}ms` }}>
@@ -388,37 +498,25 @@ const AttendanceHistory = () => {
                             <div className="ah-avatar">
                               {((rec.studentFirstName?.[0] || '') + (rec.studentLastName?.[0] || '')).toUpperCase() || '?'}
                             </div>
-                            <span className="ah-student-name">
-                              {rec.studentFirstName} {rec.studentLastName}
-                            </span>
+                            <span className="ah-student-name">{rec.studentName || `${rec.studentFirstName} ${rec.studentLastName}`}</span>
                           </div>
                         </td>
                         <td className="ah-roll">{rec.rollNumber || '—'}</td>
                         <td className="ah-class">{rec.className || '—'}</td>
                         <td className="ah-date">{formatDate(rec.date)}</td>
                         <td>
-                          <span
-                            className="ah-status-badge"
-                            style={{ '--s-color': cfg.color, '--s-bg': cfg.bg, '--s-border': cfg.border }}
-                          >
-                            <Icon size={12} />
-                            {cfg.label}
+                          <span className="ah-status-badge"
+                            style={{ '--s-color': cfg.color, '--s-bg': cfg.bg, '--s-border': cfg.border }}>
+                            <Icon size={12} />{cfg.label}
                           </span>
                         </td>
                         <td>
                           <div className="ah-actions">
-                            <button
-                              className="ah-action-btn"
-                              title="Edit"
-                              onClick={() => handleEdit(rec)}
-                            >
+                            <button className="ah-action-btn" title="Edit" onClick={() => handleEdit(rec)}>
                               <Pencil size={14} color="#0F2D5E" />
                             </button>
-                            <button
-                              className="ah-action-btn ah-delete"
-                              title="Delete"
-                              onClick={() => { setDeleteId(rec.attendanceId); setDeleteConfirm(true); }}
-                            >
+                            <button className="ah-action-btn ah-delete" title="Delete"
+                              onClick={() => { setDeleteId(rec.attendanceId); setDeleteConfirm(true); }}>
                               <Trash2 size={14} color="#EF4444" />
                             </button>
                           </div>
@@ -432,15 +530,9 @@ const AttendanceHistory = () => {
 
             {/* Pagination */}
             <div className="ah-pagination">
-              <span className="ah-page-info">
-                Page <strong>{page}</strong> of <strong>{totalPages}</strong>
-              </span>
+              <span className="ah-page-info">Page <strong>{page}</strong> of <strong>{totalPages}</strong></span>
               <div className="ah-page-btns">
-                <button
-                  className="ah-page-btn"
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                >
+                <button className="ah-page-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
                   <ChevronLeft size={15} /> Prev
                 </button>
                 {Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -452,19 +544,12 @@ const AttendanceHistory = () => {
                   }, [])
                   .map((p, i) =>
                     p === '…'
-                      ? <span key={`ellipsis-${i}`} className="ah-page-ellipsis">…</span>
-                      : <button
-                          key={p}
-                          className={`ah-page-num ${page === p ? 'ah-page-active' : ''}`}
-                          onClick={() => setPage(p)}
-                        >{p}</button>
+                      ? <span key={`e-${i}`} className="ah-page-ellipsis">…</span>
+                      : <button key={p} className={`ah-page-num ${page === p ? 'ah-page-active' : ''}`}
+                          onClick={() => setPage(p)}>{p}</button>
                   )
                 }
-                <button
-                  className="ah-page-btn"
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                >
+                <button className="ah-page-btn" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
                   Next <ChevronRight size={15} />
                 </button>
               </div>
@@ -487,29 +572,22 @@ const AttendanceHistory = () => {
                   {((editRecord.studentFirstName?.[0] || '') + (editRecord.studentLastName?.[0] || '')).toUpperCase()}
                 </div>
                 <div>
-                  <div className="ah-modal-student-name">
-                    {editRecord.studentFirstName} {editRecord.studentLastName}
-                  </div>
-                  <div className="ah-modal-meta">
-                    {editRecord.className} · {formatDate(editRecord.date)}
-                  </div>
+                  <div className="ah-modal-student-name">{editRecord.studentName || `${editRecord.studentFirstName} ${editRecord.studentLastName}`}</div>
+                  <div className="ah-modal-meta">{editRecord.className} · {formatDate(editRecord.date)}</div>
                 </div>
               </div>
-
               <div className="ah-modal-field">
                 <label className="ah-modal-label">Attendance Status</label>
                 <div className="ah-status-picker">
                   {Object.entries(STATUS_CONFIG).map(([key, cfg]) => {
                     const Icon = cfg.icon;
                     return (
-                      <button
-                        key={key}
+                      <button key={key}
                         className={`ah-status-option ${editStatus === key ? 'ah-status-selected' : ''}`}
                         style={{ '--opt-color': cfg.color, '--opt-bg': cfg.bg, '--opt-border': cfg.border }}
                         onClick={() => setEditStatus(key)}
                       >
-                        <Icon size={18} />
-                        {cfg.label}
+                        <Icon size={18} />{cfg.label}
                       </button>
                     );
                   })}

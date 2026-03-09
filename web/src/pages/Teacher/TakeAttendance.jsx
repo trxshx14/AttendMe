@@ -15,36 +15,28 @@ const STATUS_CONFIG = {
   excused:  { label: 'Excused',  color: '#6366F1', bg: '#EDE9FE', border: '#C4B5FD', icon: FileText },
 };
 
-/**
- * Tries to extract grade and section from a class object.
- * Priority: use dedicated cls.gradeLevel / cls.section fields if present.
- * Fallback: parse className like "Grade 9Integrity" or "Grade 9 Integrity".
- */
 const parseClassObj = (cls) => {
-  // If backend already sends separate fields, use them
   if (cls.gradeLevel && cls.section) {
-    return { grade: `Grade ${cls.gradeLevel}`, section: cls.section };
+    return { grade: `Grade ${cls.gradeLevel}`.trim(), section: cls.section.trim() };
   }
   if (cls.gradeLevel) {
-    return { grade: `Grade ${cls.gradeLevel}`, section: cls.section || null };
+    return { grade: `Grade ${cls.gradeLevel}`.trim(), section: cls.section?.trim() || null };
   }
   if (cls.section) {
-    // className might just be the grade part
-    return { grade: cls.className, section: cls.section };
+    return { grade: (cls.className || '').trim(), section: cls.section.trim() };
   }
-  // Last resort: parse from className string e.g. "Grade 9Integrity"
   const match = (cls.className || '').match(/^(Grade\s*\d+)\s*(.*)$/i);
   if (match) {
     return { grade: match[1].trim(), section: match[2].trim() || null };
   }
-  return { grade: cls.className, section: null };
+  return { grade: (cls.className || '').trim(), section: null };
 };
 
 const TakeAttendance = () => {
   const [classes, setClasses]               = useState([]);
   const [selectedClass, setSelectedClass]   = useState(null);
-  const [selectedGrade, setSelectedGrade]   = useState(null);   // e.g. "Grade 9"
-  const [selectedSection, setSelectedSection] = useState(null); // e.g. "Integrity"
+  const [selectedGrade, setSelectedGrade]   = useState(null);
+  const [selectedSection, setSelectedSection] = useState(null);
   const [students, setStudents]             = useState([]);
   const [attendance, setAttendance]         = useState({});
   const [searchTerm, setSearchTerm]         = useState('');
@@ -58,17 +50,19 @@ const TakeAttendance = () => {
   const [showGradeDropdown, setShowGradeDropdown]     = useState(false);
   const [showSectionDropdown, setShowSectionDropdown] = useState(false);
 
-  // All unique grades derived from classes list
+  // All unique grades — trimmed, deduplicated, sorted numerically (Grade 9 before Grade 10)
   const gradeOptions = [...new Set(
     classes.map(c => parseClassObj(c).grade)
-  )].sort();
+  )].sort((a, b) => {
+    const numA = parseInt((a || '').match(/\d+/)?.[0] || '0');
+    const numB = parseInt((b || '').match(/\d+/)?.[0] || '0');
+    return numA - numB;
+  });
 
-  // Sections that belong to the currently selected grade
   const sectionOptions = selectedGrade
     ? classes.filter(c => parseClassObj(c).grade === selectedGrade)
     : [];
 
-  // When grade changes, reset section + class + students
   const handleGradeSelect = (grade) => {
     setSelectedGrade(grade);
     setSelectedSection(null);
@@ -79,7 +73,6 @@ const TakeAttendance = () => {
     setShowGradeDropdown(false);
   };
 
-  // When section changes, find the matching class object
   const handleSectionSelect = (cls) => {
     const { section } = parseClassObj(cls);
     setSelectedSection(section);
@@ -88,9 +81,7 @@ const TakeAttendance = () => {
     setShowSectionDropdown(false);
   };
 
-  useEffect(() => {
-    fetchClasses();
-  }, []);
+  useEffect(() => { fetchClasses(); }, []);
 
   useEffect(() => {
     if (selectedClass) fetchStudents(selectedClass.classId);
@@ -155,12 +146,10 @@ const TakeAttendance = () => {
     setError('');
     try {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
-
       const attendanceData = {};
       students.forEach(s => {
         attendanceData[s.studentId] = attendance[s.studentId] || 'present';
       });
-
       const payload = {
         classId:    selectedClass.classId,
         date,
@@ -168,7 +157,6 @@ const TakeAttendance = () => {
         markedById: user.userId || user.id,
         remarks:    '',
       };
-
       const res  = await api.post('/attendance/bulk', payload);
       const data = res.data;
       if (data.success) { setSaved(true); }
@@ -180,7 +168,6 @@ const TakeAttendance = () => {
     }
   };
 
-  /* ── derived counts ── */
   const counts = Object.values(attendance).reduce((acc, s) => {
     const key  = (s || 'present').toLowerCase();
     const safe = STATUS_CONFIG[key] ? key : 'present';
@@ -204,12 +191,8 @@ const TakeAttendance = () => {
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
   });
 
-
-
   return (
     <div className="ta-root">
-
-      {/* ── Page Header ─────────────────────────────── */}
       <div className="ta-page-header">
         <div className="ta-header-left">
           <h1 className="ta-page-title">Take Attendance</h1>
@@ -224,10 +207,9 @@ const TakeAttendance = () => {
         </div>
       )}
 
-      {/* ── Controls Row ────────────────────────────── */}
       <div className="ta-controls-row">
 
-        {/* ── Grade Dropdown ── */}
+        {/* Grade Dropdown */}
         <div className="ta-selector-wrap">
           <label className="ta-control-label">Grade</label>
           <div className="ta-dropdown-root">
@@ -240,7 +222,6 @@ const TakeAttendance = () => {
               <span>{selectedGrade ?? (classLoading ? 'Loading…' : 'Select a grade')}</span>
               <ChevronDown size={16} className="ta-chevron" />
             </button>
-
             {showGradeDropdown && (
               <div className="ta-dropdown-menu">
                 {gradeOptions.length === 0
@@ -260,7 +241,7 @@ const TakeAttendance = () => {
           </div>
         </div>
 
-        {/* ── Section Dropdown ── */}
+        {/* Section Dropdown */}
         <div className="ta-selector-wrap">
           <label className="ta-control-label">Section</label>
           <div className="ta-dropdown-root">
@@ -274,7 +255,6 @@ const TakeAttendance = () => {
               <span>{selectedSection ?? (selectedGrade ? 'Select a section' : '— select grade first')}</span>
               <ChevronDown size={16} className="ta-chevron" />
             </button>
-
             {showSectionDropdown && (
               <div className="ta-dropdown-menu">
                 {sectionOptions.length === 0
@@ -309,25 +289,8 @@ const TakeAttendance = () => {
           />
         </div>
 
-        {/* Save Button */}
-        <div className="ta-selector-wrap ta-save-wrap">
-          <label className="ta-control-label">&nbsp;</label>
-          <button
-            className={`ta-save-btn ${saved ? 'ta-saved' : ''}`}
-            onClick={handleSave}
-            disabled={!selectedClass || students.length === 0 || saving}
-          >
-            {saved
-              ? <><CheckCheck size={17} /> Saved!</>
-              : saving
-                ? <><span className="ta-btn-spinner" /> Saving…</>
-                : <><Save size={17} /> Save Attendance</>
-            }
-          </button>
-        </div>
       </div>
 
-      {/* ── Summary Strip ───────────────────────────── */}
       {selectedClass && !loading && students.length > 0 && (
         <div className="ta-summary-strip">
           {Object.entries(STATUS_CONFIG).map(([key, cfg]) => {
@@ -349,7 +312,6 @@ const TakeAttendance = () => {
         </div>
       )}
 
-      {/* ── Student List Panel ───────────────────────── */}
       {!selectedClass ? (
         <div className="ta-placeholder">
           <div className="ta-placeholder-icon"><Users size={40} /></div>
@@ -369,8 +331,6 @@ const TakeAttendance = () => {
         </div>
       ) : (
         <div className="ta-list-panel">
-
-          {/* Toolbar */}
           <div className="ta-list-toolbar">
             <div className="ta-search-box">
               <Search size={15} className="ta-search-icon" />
@@ -385,9 +345,7 @@ const TakeAttendance = () => {
                 <button className="ta-search-clear" onClick={() => setSearchTerm('')}><X size={12} /></button>
               )}
             </div>
-
             <div className="ta-toolbar-divider" />
-
             <div className="ta-filter-wrap">
               <Filter size={14} className="ta-filter-icon" />
               <select
@@ -401,9 +359,7 @@ const TakeAttendance = () => {
                 ))}
               </select>
             </div>
-
             <div className="ta-toolbar-divider" />
-
             <div className="ta-mark-all-wrap">
               <span className="ta-mark-all-label">Mark all:</span>
               {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
@@ -424,7 +380,6 @@ const TakeAttendance = () => {
             Showing <strong>{filteredStudents.length}</strong> of <strong>{students.length}</strong> students
           </div>
 
-          {/* Student Rows */}
           <div className="ta-students-list">
             {filteredStudents.length === 0 ? (
               <div className="ta-no-results">No students match your search.</div>
@@ -432,22 +387,14 @@ const TakeAttendance = () => {
               const currentStatus = (attendance[student.studentId] || 'present').toLowerCase();
               const cfg = STATUS_CONFIG[currentStatus] || STATUS_CONFIG['present'];
               return (
-                <div
-                  key={student.studentId}
-                  className="ta-student-row"
-                  style={{ animationDelay: `${idx * 30}ms` }}
-                >
+                <div key={student.studentId} className="ta-student-row" style={{ animationDelay: `${idx * 30}ms` }}>
                   <div className="ta-avatar">
                     {((student.firstName?.[0] || '') + (student.lastName?.[0] || '')).toUpperCase() || '?'}
                   </div>
-
                   <div className="ta-student-info">
-                    <span className="ta-student-name">
-                      {student.firstName} {student.lastName}
-                    </span>
+                    <span className="ta-student-name">{student.firstName} {student.lastName}</span>
                     <span className="ta-student-roll">{student.rollNumber}</span>
                   </div>
-
                   <div className="ta-status-btns">
                     {Object.entries(STATUS_CONFIG).map(([key, scfg]) => {
                       const Icon     = scfg.icon;
@@ -456,11 +403,7 @@ const TakeAttendance = () => {
                         <button
                           key={key}
                           className={`ta-status-btn ${isActive ? 'ta-status-active' : ''}`}
-                          style={isActive ? {
-                            '--sb-color': scfg.color,
-                            '--sb-bg':    scfg.bg,
-                            '--sb-border': scfg.border,
-                          } : {}}
+                          style={isActive ? { '--sb-color': scfg.color, '--sb-bg': scfg.bg, '--sb-border': scfg.border } : {}}
                           onClick={() => setStatus(student.studentId, key)}
                           title={scfg.label}
                         >
@@ -470,11 +413,7 @@ const TakeAttendance = () => {
                       );
                     })}
                   </div>
-
-                  <div
-                    className="ta-current-badge"
-                    style={{ '--cb-color': cfg.color, '--cb-bg': cfg.bg, '--cb-border': cfg.border }}
-                  >
+                  <div className="ta-current-badge" style={{ '--cb-color': cfg.color, '--cb-bg': cfg.bg, '--cb-border': cfg.border }}>
                     {cfg.label}
                   </div>
                 </div>
@@ -482,7 +421,6 @@ const TakeAttendance = () => {
             })}
           </div>
 
-          {/* Footer Save */}
           <div className="ta-list-footer">
             <span className="ta-footer-info">
               {todayLabel} · {selectedGrade}
