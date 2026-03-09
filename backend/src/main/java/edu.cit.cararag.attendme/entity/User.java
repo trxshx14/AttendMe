@@ -45,7 +45,7 @@ public class User {
     private String googleId;
     
     @Column(name = "is_active")
-    private Boolean isActive = true;
+    private boolean isActive;
     
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
