@@ -21,10 +21,12 @@ public class RefreshToken {
     private Long tokenId;
     
     @ManyToOne(fetch = FetchType.LAZY)
+
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
     
-    @Column(nullable = false, unique = true, length = 500)
+    // AFTER
+    @Column(nullable = false, unique = true, columnDefinition = "TEXT")
     private String token;
     
     @Column(name = "expires_at", nullable = false)
@@ -34,7 +36,8 @@ public class RefreshToken {
     @CreationTimestamp
     private LocalDateTime createdAt;
     
-    @Column(name = "is_revoked")
+    // AFTER
+    @Column(name = "is_revoked", columnDefinition = "boolean default false")
     private boolean isRevoked = false;
     
     public boolean isExpired() {

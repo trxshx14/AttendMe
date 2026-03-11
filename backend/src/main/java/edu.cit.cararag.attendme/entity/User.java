@@ -44,7 +44,8 @@ public class User {
     @Column(name = "google_id", unique = true)
     private String googleId;
     
-    @Column(name = "is_active")
+    // AFTER
+    @Column(name = "is_active", columnDefinition = "boolean default true")
     private boolean isActive;
     
     @Column(name = "last_login")
