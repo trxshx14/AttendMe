@@ -40,11 +40,9 @@ export const userService = {
   async createUser(userData) {
     try {
       console.log('🔵 Creating new user with data:', userData);
-      
-      // Generate username from email (remove domain and special characters)
+
       const username = userData.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
-      
-      // Prepare the payload for backend - MATCHING EXACT FIELDS
+
       const payload = {
         username: username,
         email: userData.email,
@@ -52,33 +50,56 @@ export const userService = {
         password: userData.password || this.generateTemporaryPassword(),
         role: userData.role.toUpperCase()
       };
-      
+
       console.log('📦 Sending payload to /auth/register:', payload);
-      
+
       const response = await api.post('/auth/register', payload);
       console.log('✅ Create user response:', response.data);
-      
-      // Add temporary password to response data for display
+
+      const tempPassword = payload.password;
+
+      // /auth/register returns tokens + user — extract the user object
+      // then fetch the full user by email so we get the userId
       if (response.data.success) {
-        response.data.data = {
-          ...response.data.data,
-          tempPassword: payload.password
-        };
+        const userEmail = payload.email;
+
+        // Fetch the newly created user by email to get their userId
+        try {
+          const allUsersRes = await api.get('/users');
+          const allUsers = allUsersRes.data?.data || [];
+          const newUser = allUsers.find(u => u.email === userEmail);
+
+          console.log('🔍 Found newly created user:', newUser);
+
+          return {
+            success: true,
+            data: {
+              ...(newUser || {}),
+              userId: newUser?.userId,
+              tempPassword,
+            }
+          };
+        } catch (fetchErr) {
+          console.warn('⚠️ Could not fetch new user after creation:', fetchErr);
+          // Fallback — return what register gave us (no userId, pic upload will skip)
+          return {
+            success: true,
+            data: {
+              ...response.data.data,
+              tempPassword,
+            }
+          };
+        }
       }
-      
+
       return response.data;
     } catch (error) {
-      // Log the detailed error response
       console.error('❌ Error creating user - Full error:', error);
       console.error('❌ Error response data:', error.response?.data);
-      console.error('❌ Error status:', error.response?.status);
-      console.error('❌ Error headers:', error.response?.headers);
-      
-      // Throw a more informative error
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error || 
-                          error.message || 
-                          'Failed to create user';
+      const errorMessage = error.response?.data?.message ||
+                           error.response?.data?.error ||
+                           error.message ||
+                           'Failed to create user';
       throw new Error(errorMessage);
     }
   },
@@ -87,18 +108,17 @@ export const userService = {
   async updateUser(id, userData) {
     try {
       console.log('🔵 Updating user:', id, userData);
-      
+
       const payload = {
         fullName: userData.fullName,
         email: userData.email,
         role: userData.role.toUpperCase()
       };
-      
-      // Only include password if it's provided
+
       if (userData.password) {
         payload.password = userData.password;
       }
-      
+
       const response = await api.put(`/users/${id}`, payload);
       console.log('✅ Update user response:', response.data);
       return response.data;
@@ -147,18 +167,33 @@ export const userService = {
     }
   },
 
+  // Upload profile picture
+  async uploadProfilePicture(userId, formData) {
+    try {
+      console.log('🔵 Uploading profile picture for user:', userId);
+      const response = await api.post(`/users/${userId}/profile-picture`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      console.log('✅ Upload profile picture response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error uploading profile picture:', error.response?.data || error);
+      throw error;
+    }
+  },
+
   // Reset password
   async resetPassword(id) {
     try {
       console.log('🔵 Resetting password for user:', id);
       const tempPassword = this.generateTemporaryPassword();
-      
+
       const response = await api.put(`/users/${id}`, {
         password: tempPassword
       });
-      
+
       console.log('✅ Reset password response:', response.data);
-      
+
       return {
         ...response.data,
         tempPassword
@@ -169,7 +204,7 @@ export const userService = {
     }
   },
 
-  // Helper function to generate temporary password
+  // Helper: generate temporary password
   generateTemporaryPassword() {
     const length = 10;
     const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$';
@@ -177,13 +212,8 @@ export const userService = {
     for (let i = 0; i < length; i++) {
       password += charset.charAt(Math.floor(Math.random() * charset.length));
     }
-    // Ensure it has at least one number and one special character
-    if (!/[0-9]/.test(password)) {
-      password = password.slice(0, -1) + Math.floor(Math.random() * 10);
-    }
-    if (!/[!@#$]/.test(password)) {
-      password = password.slice(0, -1) + '!';
-    }
+    if (!/[0-9]/.test(password)) password = password.slice(0, -1) + Math.floor(Math.random() * 10);
+    if (!/[!@#$]/.test(password)) password = password.slice(0, -1) + '!';
     return password;
   }
 };

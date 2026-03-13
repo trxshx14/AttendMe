@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { userService } from '../../services/userService';
 import {
   Users, ShieldCheck, UserCircle2, CheckCircle2,
   Search, Pencil, Trash2, X, Plus, Key,
-  ToggleLeft, ToggleRight, Eye, EyeOff
+  ToggleLeft, ToggleRight, Eye, EyeOff, Camera, Upload
 } from 'lucide-react';
 import './ManageUsers.css';
 
@@ -16,6 +16,12 @@ const ManageUsers = () => {
   const [editingUser, setEditingUser] = useState(null);
   const [formData, setFormData]     = useState({ fullName: '', email: '', role: 'TEACHER', password: '' });
   const [showPassword, setShowPassword] = useState(false);
+
+  // Profile picture states
+  const [profilePicFile, setProfilePicFile]       = useState(null);
+  const [profilePicPreview, setProfilePicPreview] = useState(null);
+  const [uploadingPic, setUploadingPic]           = useState(false);
+  const fileInputRef = useRef(null);
 
   const [searchTerm, setSearchTerm]     = useState('');
   const [filterRole, setFilterRole]     = useState('all');
@@ -33,22 +39,6 @@ const ManageUsers = () => {
       const response = await userService.getAllUsers();
       if (response?.success) {
         const raw = response.data || [];
-
-        // Debug: log the first user so we can see exact field names from backend
-        if (raw.length > 0) {
-          // Log every user's active-related fields clearly
-          console.log('[ManageUsers] ALL USERS STATUS CHECK:');
-          raw.forEach(u => {
-            console.log(
-              `  ${u.fullName} → active=${u.active} | isActive=${u.isActive} | enabled=${u.enabled} | status=${u.status} | accountNonLocked=${u.accountNonLocked}`
-            );
-          });
-        }
-
-        // Determine active status strictly:
-        // Only trust `active` if it's explicitly a boolean on the object.
-        // Fall back to `isActive`, then `enabled`, then `status === 'ACTIVE'`.
-        // Do NOT chain with ?? false until we've tried all known fields.
         const normalized = raw.map(u => {
           let isActive = false;
           if (typeof u.active   === 'boolean') isActive = u.active;
@@ -84,6 +74,34 @@ const ManageUsers = () => {
   const totalTeachers = users.filter(u => u.role === 'TEACHER').length;
   const totalActive   = users.filter(u => u.active).length;
 
+  /* ── Profile picture handlers ────────────────────────── */
+  const handlePicChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Please select a valid image file');
+      return;
+    }
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setError('Image must be smaller than 2MB');
+      return;
+    }
+
+    setProfilePicFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setProfilePicPreview(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePic = () => {
+    setProfilePicFile(null);
+    setProfilePicPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   /* ── Modal helpers ───────────────────────────────────── */
   const handleOpenModal = (user = null) => {
     setEditingUser(user);
@@ -91,6 +109,9 @@ const ManageUsers = () => {
       ? { fullName: user.fullName, email: user.email, role: user.role, password: '' }
       : { fullName: '', email: '', role: 'TEACHER', password: '' }
     );
+    // Pre-fill profile pic preview if user already has one
+    setProfilePicFile(null);
+    setProfilePicPreview(user?.profilePicUrl || user?.avatarUrl || null);
     setShowModal(true);
     setShowPassword(false);
     setError('');
@@ -100,6 +121,8 @@ const ManageUsers = () => {
     setShowModal(false);
     setEditingUser(null);
     setFormData({ fullName: '', email: '', role: 'TEACHER', password: '' });
+    setProfilePicFile(null);
+    setProfilePicPreview(null);
     setError('');
   };
 
@@ -114,21 +137,51 @@ const ManageUsers = () => {
     setSaving(true);
     setError('');
     try {
-      let response;
+      let savedUser = null;
+
       if (editingUser) {
-        response = await userService.updateUser(editingUser.userId, {
+        const response = await userService.updateUser(editingUser.userId, {
           fullName: formData.fullName,
           email:    formData.email,
           role:     formData.role,
           ...(formData.password && { password: formData.password }),
         });
+        if (!response?.success) {
+          setError(response?.message || 'Failed to save user');
+          return;
+        }
+        savedUser = response.data;
       } else {
-        response = await userService.createUser(formData);
+        const response = await userService.createUser(formData);
+        if (!response?.success) {
+          setError(response?.message || 'Failed to save user');
+          return;
+        }
+        savedUser = response.data;
       }
-      if (response?.success) { handleCloseModal(); await fetchUsers(); }
-      else setError(response?.message || 'Failed to save user');
-    } catch (err) { setError(err.message || 'An error occurred'); }
-    finally { setSaving(false); }
+
+      // Upload profile picture if a new file was selected
+      if (profilePicFile && savedUser?.userId) {
+        setUploadingPic(true);
+        try {
+          const formDataPic = new FormData();
+          formDataPic.append('file', profilePicFile);
+          await userService.uploadProfilePicture(savedUser.userId, formDataPic);
+        } catch (picErr) {
+          console.warn('Profile picture upload failed:', picErr);
+          // Don't block — user was saved, just pic upload failed
+        } finally {
+          setUploadingPic(false);
+        }
+      }
+
+      handleCloseModal();
+      await fetchUsers();
+    } catch (err) {
+      setError(err.message || 'An error occurred');
+    } finally {
+      setSaving(false);
+    }
   };
 
   /* ── Delete ──────────────────────────────────────────── */
@@ -138,7 +191,6 @@ const ManageUsers = () => {
     try {
       const response = await userService.deleteUser(userId);
       if (response?.success) {
-        // Optimistic remove
         setUsers(prev => prev.filter(u => u.userId !== userId));
       } else setError('Failed to delete user');
     } catch { setError('Error deleting user'); }
@@ -147,44 +199,33 @@ const ManageUsers = () => {
   /* ── Toggle active / inactive ────────────────────────── */
   const handleToggleActive = async (userId, currentActive) => {
     setError('');
-    // Optimistic UI update first so the toggle feels instant
     setUsers(prev => prev.map(u =>
       u.userId === userId ? { ...u, active: !currentActive } : u
     ));
     try {
-      let response;
-      if (currentActive) {
-        // Currently active → deactivate
-        response = await userService.deactivateUser(userId);
-      } else {
-        // Currently inactive → activate
-        response = await userService.activateUser(userId);
-      }
+      const response = currentActive
+        ? await userService.deactivateUser(userId)
+        : await userService.activateUser(userId);
 
       if (response?.success) {
-        // Sync the real value back from the server response if available
         const d = response.data || {};
         let serverActive;
         if      (typeof d.active   === 'boolean') serverActive = d.active;
         else if (typeof d.isActive === 'boolean') serverActive = d.isActive;
         else if (typeof d.enabled  === 'boolean') serverActive = d.enabled;
         else if (typeof d.status   === 'string')  serverActive = d.status.toUpperCase() === 'ACTIVE';
-        else serverActive = !currentActive; // fallback: trust the toggle worked
-
-        console.log('[ManageUsers] toggle response active =', serverActive, '| raw:', d);
+        else serverActive = !currentActive;
 
         setUsers(prev => prev.map(u =>
           u.userId === userId ? { ...u, active: serverActive } : u
         ));
       } else {
-        // Revert optimistic update on failure
         setUsers(prev => prev.map(u =>
           u.userId === userId ? { ...u, active: currentActive } : u
         ));
         setError(response?.message || 'Failed to update user status');
       }
     } catch {
-      // Revert on error
       setUsers(prev => prev.map(u =>
         u.userId === userId ? { ...u, active: currentActive } : u
       ));
@@ -206,6 +247,23 @@ const ManageUsers = () => {
 
   const getInitials = (name) =>
     name ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '??';
+
+  /* ── Avatar renderer (table row) ─────────────────────── */
+  const UserAvatar = ({ user, size = 38 }) => {
+    const picUrl = user?.profilePicUrl || user?.avatarUrl;
+    if (picUrl) {
+      return (
+        <img
+          src={picUrl}
+          alt={user.fullName}
+          className="mu-avatar mu-avatar-img"
+          style={{ width: size, height: size }}
+          onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+        />
+      );
+    }
+    return <div className="mu-avatar">{getInitials(user.fullName)}</div>;
+  };
 
   if (loading && users.length === 0) return <div className="mu-loading">Loading users...</div>;
 
@@ -314,7 +372,12 @@ const ManageUsers = () => {
               <tr key={user.userId}>
                 <td>
                   <div className="mu-user-cell">
-                    <div className="mu-avatar">{getInitials(user.fullName)}</div>
+                    <div className="mu-avatar-wrap">
+                      {(user.profilePicUrl || user.avatarUrl)
+                        ? <img src={user.profilePicUrl || user.avatarUrl} alt={user.fullName} className="mu-avatar mu-avatar-img" />
+                        : <div className="mu-avatar">{getInitials(user.fullName)}</div>
+                      }
+                    </div>
                     <span className="mu-user-name">{user.fullName}</span>
                   </div>
                 </td>
@@ -386,6 +449,61 @@ const ManageUsers = () => {
             </div>
             <form onSubmit={handleSubmit}>
               <div className="mu-modal-body">
+
+                {/* ── Profile Picture Upload ── */}
+                <div className="mu-form-group mu-pic-group">
+                  <label className="mu-form-label">Profile Photo</label>
+                  <div className="mu-pic-upload-area">
+                    <div className="mu-pic-preview-wrap">
+                      {profilePicPreview
+                        ? <img src={profilePicPreview} alt="Preview" className="mu-pic-preview" />
+                        : (
+                          <div className="mu-pic-placeholder">
+                            <Camera size={28} color="#94A3B8" />
+                            <span>No photo</span>
+                          </div>
+                        )
+                      }
+                      {/* Camera overlay button */}
+                      <button
+                        type="button"
+                        className="mu-pic-overlay-btn"
+                        onClick={() => fileInputRef.current?.click()}
+                        title="Upload photo"
+                      >
+                        <Camera size={16} color="#fff" />
+                      </button>
+                    </div>
+
+                    <div className="mu-pic-actions">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={handlePicChange}
+                      />
+                      <button
+                        type="button"
+                        className="mu-btn-outline mu-pic-btn"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Upload size={14} /> Choose Photo
+                      </button>
+                      {profilePicPreview && (
+                        <button
+                          type="button"
+                          className="mu-btn-outline mu-pic-btn mu-pic-remove"
+                          onClick={handleRemovePic}
+                        >
+                          <X size={14} /> Remove
+                        </button>
+                      )}
+                      <small className="mu-form-hint">JPG, PNG or GIF · Max 2MB</small>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="mu-form-group">
                   <label className="mu-form-label">Full Name *</label>
                   <input type="text" name="fullName" className="mu-form-input" value={formData.fullName}
@@ -431,8 +549,8 @@ const ManageUsers = () => {
               </div>
               <div className="mu-modal-footer">
                 <button type="button" className="mu-btn-outline" onClick={handleCloseModal}>Cancel</button>
-                <button type="submit" className="mu-btn-primary" disabled={saving}>
-                  {saving ? 'Saving...' : (editingUser ? 'Update User' : 'Create User')}
+                <button type="submit" className="mu-btn-primary" disabled={saving || uploadingPic}>
+                  {uploadingPic ? 'Uploading photo...' : saving ? 'Saving...' : (editingUser ? 'Update User' : 'Create User')}
                 </button>
               </div>
             </form>

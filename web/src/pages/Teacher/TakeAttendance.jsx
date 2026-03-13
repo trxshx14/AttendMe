@@ -33,24 +33,25 @@ const parseClassObj = (cls) => {
 };
 
 const TakeAttendance = () => {
-  const [classes, setClasses]               = useState([]);
-  const [selectedClass, setSelectedClass]   = useState(null);
-  const [selectedGrade, setSelectedGrade]   = useState(null);
-  const [selectedSection, setSelectedSection] = useState(null);
-  const [students, setStudents]             = useState([]);
-  const [attendance, setAttendance]         = useState({});
-  const [searchTerm, setSearchTerm]         = useState('');
-  const [filterStatus, setFilterStatus]     = useState('all');
-  const [loading, setLoading]               = useState(false);
-  const [classLoading, setClassLoading]     = useState(true);
-  const [saving, setSaving]                 = useState(false);
-  const [saved, setSaved]                   = useState(false);
-  const [error, setError]                   = useState('');
-  const [date, setDate]                     = useState(new Date().toISOString().split('T')[0]);
-  const [showGradeDropdown, setShowGradeDropdown]     = useState(false);
-  const [showSectionDropdown, setShowSectionDropdown] = useState(false);
+  const [classes, setClasses]                           = useState([]);
+  const [selectedClass, setSelectedClass]               = useState(null);
+  const [selectedGrade, setSelectedGrade]               = useState(null);
+  const [selectedSection, setSelectedSection]           = useState(null);
+  const [selectedSubject, setSelectedSubject]           = useState(null);
+  const [students, setStudents]                         = useState([]);
+  const [attendance, setAttendance]                     = useState({});
+  const [searchTerm, setSearchTerm]                     = useState('');
+  const [filterStatus, setFilterStatus]                 = useState('all');
+  const [loading, setLoading]                           = useState(false);
+  const [classLoading, setClassLoading]                 = useState(true);
+  const [saving, setSaving]                             = useState(false);
+  const [saved, setSaved]                               = useState(false);
+  const [error, setError]                               = useState('');
+  const [date, setDate]                                 = useState(new Date().toISOString().split('T')[0]);
+  const [showGradeDropdown, setShowGradeDropdown]       = useState(false);
+  const [showSectionDropdown, setShowSectionDropdown]   = useState(false);
+  const [showSubjectDropdown, setShowSubjectDropdown]   = useState(false);
 
-  // All unique grades — trimmed, deduplicated, sorted numerically (Grade 9 before Grade 10)
   const gradeOptions = [...new Set(
     classes.map(c => parseClassObj(c).grade)
   )].sort((a, b) => {
@@ -63,10 +64,20 @@ const TakeAttendance = () => {
     ? classes.filter(c => parseClassObj(c).grade === selectedGrade)
     : [];
 
+  const subjectOptions = selectedSection
+    ? [...new Set(
+        classes
+          .filter(c => parseClassObj(c).grade === selectedGrade && parseClassObj(c).section === selectedSection)
+          .map(c => c.subject)
+          .filter(Boolean)
+      )]
+    : [];
+
   const handleGradeSelect = (grade) => {
     setSelectedGrade(grade);
     setSelectedSection(null);
     setSelectedClass(null);
+    setSelectedSubject(null);
     setStudents([]);
     setAttendance({});
     setSaved(false);
@@ -77,8 +88,14 @@ const TakeAttendance = () => {
     const { section } = parseClassObj(cls);
     setSelectedSection(section);
     setSelectedClass(cls);
+    setSelectedSubject(null);
     setSaved(false);
     setShowSectionDropdown(false);
+  };
+
+  const handleSubjectSelect = (subject) => {
+    setSelectedSubject(subject);
+    setShowSubjectDropdown(false);
   };
 
   useEffect(() => { fetchClasses(); }, []);
@@ -215,7 +232,11 @@ const TakeAttendance = () => {
           <div className="ta-dropdown-root">
             <button
               className={`ta-dropdown-trigger ${showGradeDropdown ? 'ta-dropdown-open' : ''}`}
-              onClick={() => { setShowGradeDropdown(v => !v); setShowSectionDropdown(false); }}
+              onClick={() => {
+                setShowGradeDropdown(v => !v);
+                setShowSectionDropdown(false);
+                setShowSubjectDropdown(false);
+              }}
               disabled={classLoading}
             >
               <Users size={16} className="ta-trigger-icon" />
@@ -247,7 +268,13 @@ const TakeAttendance = () => {
           <div className="ta-dropdown-root">
             <button
               className={`ta-dropdown-trigger ${showSectionDropdown ? 'ta-dropdown-open' : ''}`}
-              onClick={() => { if (selectedGrade) { setShowSectionDropdown(v => !v); setShowGradeDropdown(false); } }}
+              onClick={() => {
+                if (selectedGrade) {
+                  setShowSectionDropdown(v => !v);
+                  setShowGradeDropdown(false);
+                  setShowSubjectDropdown(false);
+                }
+              }}
               disabled={!selectedGrade || classLoading}
               style={!selectedGrade ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
             >
@@ -268,10 +295,49 @@ const TakeAttendance = () => {
                         onClick={() => handleSectionSelect(cls)}
                       >
                         <div className="ta-dropdown-item-name">{section || cls.className}</div>
-                        <div className="ta-dropdown-item-meta">{cls.subject} · {cls.studentCount || 0} students</div>
+                        <div className="ta-dropdown-item-meta">{cls.studentCount || 0} students</div>
                       </button>
                     );
                   })
+                }
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Subject Dropdown */}
+        <div className="ta-selector-wrap">
+          <label className="ta-control-label">Subject</label>
+          <div className="ta-dropdown-root">
+            <button
+              className={`ta-dropdown-trigger ${showSubjectDropdown ? 'ta-dropdown-open' : ''}`}
+              onClick={() => {
+                if (selectedClass) {
+                  setShowSubjectDropdown(v => !v);
+                  setShowGradeDropdown(false);
+                  setShowSectionDropdown(false);
+                }
+              }}
+              disabled={!selectedClass || classLoading}
+              style={!selectedClass ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+            >
+              <FileText size={16} className="ta-trigger-icon" />
+              <span>{selectedSubject ?? (selectedClass ? 'Select a subject' : '— select section first')}</span>
+              <ChevronDown size={16} className="ta-chevron" />
+            </button>
+            {showSubjectDropdown && (
+              <div className="ta-dropdown-menu">
+                {subjectOptions.length === 0
+                  ? <div className="ta-dropdown-empty">No subjects found</div>
+                  : subjectOptions.map(subject => (
+                    <button
+                      key={subject}
+                      className={`ta-dropdown-item ${selectedSubject === subject ? 'ta-dropdown-active' : ''}`}
+                      onClick={() => handleSubjectSelect(subject)}
+                    >
+                      <div className="ta-dropdown-item-name">{subject}</div>
+                    </button>
+                  ))
                 }
               </div>
             )}
@@ -425,6 +491,7 @@ const TakeAttendance = () => {
             <span className="ta-footer-info">
               {todayLabel} · {selectedGrade}
               {selectedSection && ` — ${selectedSection}`}
+              {selectedSubject && ` · ${selectedSubject}`}
             </span>
             <button
               className={`ta-save-btn ${saved ? 'ta-saved' : ''}`}
