@@ -14,6 +14,7 @@ import edu.cit.cararag.attendme.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -79,6 +80,9 @@ public class AuthServiceImp implements AuthService {
                     .profilePicUrl(user.getProfilePicUrl())
                     .build();
 
+        } catch (DisabledException e) {
+            System.err.println("❌ Account disabled: " + e.getMessage());
+            throw new UnauthorizedException("Account is deactivated. Please contact your administrator.");
         } catch (BadCredentialsException e) {
             System.err.println("❌ Bad credentials: " + e.getMessage());
             throw new UnauthorizedException("Invalid email or password");
