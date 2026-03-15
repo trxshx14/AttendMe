@@ -84,7 +84,7 @@ This project was developed as an **individual project for the System Integration
 
 # 👩‍💻 Developer
 **Trisha Raye V. Cararag**
-Bachelor of Science in Information Technology (BSIT)
+*Bachelor of Science in Information Technology (BSIT)
 
 
 
