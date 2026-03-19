@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="12dp"
+    android:background="@drawable/bg_student_item"
+    android:layout_marginBottom="8dp">
+
+    <!-- Avatar -->
+    <LinearLayout
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/bg_icon_navy"
+        android:gravity="center"
+        android:layout_marginEnd="12dp">
+        <TextView
+            android:id="@+id/tvStudentInitials"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="JD"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"/>
+    </LinearLayout>
+
+    <!-- Info -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/tvStudentName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Juan dela Cruz"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#0F2D5E"/>
+        <TextView
+            android:id="@+id/tvRollNumber"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Roll: 2024-0001"
+            android:textSize="12sp"
+            android:textColor="#64748B"/>
+    </LinearLayout>
+
+    <!-- Remove Button -->
+    <Button
+        android:id="@+id/btnRemoveStudent"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:text="✕"
+        android:textSize="12sp"
+        android:textColor="#DC2626"
+        android:backgroundTint="#FEE2E2"
+        android:stateListAnimator="@null"
+        android:padding="0dp"
+        app:cornerRadius="8dp"/>
+
+</LinearLayout>

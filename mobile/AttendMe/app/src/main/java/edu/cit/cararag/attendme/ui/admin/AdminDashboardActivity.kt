@@ -36,7 +36,7 @@ class AdminDashboardActivity : AppCompatActivity() {
             startActivity(Intent(this, ManageUsersActivity::class.java))
         }
         findViewById<androidx.cardview.widget.CardView>(R.id.cardManageClasses).setOnClickListener {
-            // TODO: ManageClassesActivity
+            startActivity(Intent(this, ManageClassesActivity::class.java))
         }
         findViewById<androidx.cardview.widget.CardView>(R.id.cardReports).setOnClickListener {
             // TODO: ReportsActivity

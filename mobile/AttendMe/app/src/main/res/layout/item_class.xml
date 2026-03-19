@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="#FFFFFF">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="#0F2D5E"
+            android:padding="16dp"
+            android:gravity="center_vertical">
+
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:orientation="vertical">
+                <TextView android:id="@+id/tvClassName"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Class Name" android:textSize="16sp" android:textStyle="bold"
+                    android:textColor="#FFFFFF"/>
+                <TextView android:id="@+id/tvSubject"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Subject" android:textSize="12sp" android:textColor="#AAC4E0"
+                    android:layout_marginTop="2dp"/>
+            </LinearLayout>
+
+            <TextView android:id="@+id/tvSection"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="—" android:textSize="11sp" android:textStyle="bold"
+                android:textColor="#FFFFFF" android:background="@drawable/bg_section_badge"
+                android:paddingStart="10dp" android:paddingEnd="10dp"
+                android:paddingTop="4dp" android:paddingBottom="4dp"/>
+        </LinearLayout>
+
+        <!-- Body -->
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:padding="16dp">
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:layout_marginBottom="8dp"
+                android:gravity="center_vertical">
+                <TextView android:layout_width="80dp" android:layout_height="wrap_content"
+                    android:text="Teacher" android:textSize="12sp" android:textColor="#64748B"/>
+                <TextView android:id="@+id/tvTeacher"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="—" android:textSize="12sp" android:textStyle="bold"
+                    android:textColor="#0F2D5E"/>
+            </LinearLayout>
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:layout_marginBottom="8dp"
+                android:gravity="center_vertical">
+                <TextView android:layout_width="80dp" android:layout_height="wrap_content"
+                    android:text="Schedule" android:textSize="12sp" android:textColor="#64748B"/>
+                <TextView android:id="@+id/tvSchedule"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="—" android:textSize="12sp" android:textStyle="bold"
+                    android:textColor="#0F2D5E"/>
+            </LinearLayout>
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="center_vertical">
+                <TextView android:layout_width="80dp" android:layout_height="wrap_content"
+                    android:text="Students" android:textSize="12sp" android:textColor="#64748B"/>
+                <TextView android:id="@+id/tvStudentCount"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="0" android:textSize="12sp" android:textStyle="bold"
+                    android:textColor="#FFFFFF" android:background="@drawable/bg_icon_navy"
+                    android:paddingStart="10dp" android:paddingEnd="10dp"
+                    android:paddingTop="3dp" android:paddingBottom="3dp"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Actions -->
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:padding="12dp" android:gravity="end"
+            android:background="#F4F7FB">
+
+            <Button android:id="@+id/btnViewStudents"
+                android:layout_width="wrap_content" android:layout_height="36dp"
+                android:text="Students" android:textSize="12sp" android:textColor="#0F2D5E"
+                android:backgroundTint="#EBF2FF" android:stateListAnimator="@null"
+                app:cornerRadius="8dp" android:layout_marginEnd="6dp"/>
+
+            <Button android:id="@+id/btnEdit"
+                android:layout_width="36dp" android:layout_height="36dp"
+                android:text="✏️" android:backgroundTint="#EBF2FF"
+                android:stateListAnimator="@null" app:cornerRadius="8dp"
+                android:layout_marginEnd="6dp" android:padding="0dp"/>
+
+            <Button android:id="@+id/btnDelete"
+                android:layout_width="36dp" android:layout_height="36dp"
+                android:text="🗑️" android:backgroundTint="#FEE2E2"
+                android:stateListAnimator="@null" app:cornerRadius="8dp" android:padding="0dp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

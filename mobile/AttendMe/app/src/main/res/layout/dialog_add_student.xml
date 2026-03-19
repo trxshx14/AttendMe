@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="First Name *" android:textSize="11sp" android:textStyle="bold"
+        android:textColor="#0F2D5E" android:layout_marginBottom="4dp"/>
+    <EditText android:id="@+id/etFirstName" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:hint="e.g. Juan"
+        android:inputType="textPersonName" android:padding="10dp" android:textSize="14sp"
+        android:textColor="#0F2D5E" android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_input"/>
+
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="Last Name *" android:textSize="11sp" android:textStyle="bold"
+        android:textColor="#0F2D5E" android:layout_marginBottom="4dp"/>
+    <EditText android:id="@+id/etLastName" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:hint="e.g. dela Cruz"
+        android:inputType="textPersonName" android:padding="10dp" android:textSize="14sp"
+        android:textColor="#0F2D5E" android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_input"/>
+
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="Roll Number *" android:textSize="11sp" android:textStyle="bold"
+        android:textColor="#0F2D5E" android:layout_marginBottom="4dp"/>
+    <EditText android:id="@+id/etRollNumber" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:hint="e.g. 2024-0001"
+        android:inputType="text" android:padding="10dp" android:textSize="14sp"
+        android:textColor="#0F2D5E" android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_input"/>
+
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="Email (optional)" android:textSize="11sp" android:textStyle="bold"
+        android:textColor="#0F2D5E" android:layout_marginBottom="4dp"/>
+    <EditText android:id="@+id/etEmail" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:hint="student@email.com"
+        android:inputType="textEmailAddress" android:padding="10dp" android:textSize="14sp"
+        android:textColor="#0F2D5E" android:background="@drawable/bg_input"/>
+
+</LinearLayout>

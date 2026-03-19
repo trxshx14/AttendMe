@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#FFFFFF">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- Class Name -->
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="GRADE / CLASS NAME *" android:textSize="11sp" android:textStyle="bold"
+            android:textColor="#0F2D5E" android:letterSpacing="0.06" android:layout_marginBottom="6dp"/>
+        <EditText android:id="@+id/etClassName"
+            android:layout_width="match_parent" android:layout_height="48dp"
+            android:hint="e.g., Grade 9 - Integrity"
+            android:background="@drawable/bg_input"
+            android:paddingStart="14dp" android:paddingEnd="14dp"
+            android:textColor="#0F2D5E" android:textColorHint="#94A3B8"
+            android:textSize="14sp" android:inputType="text"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Subject -->
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="SUBJECT *" android:textSize="11sp" android:textStyle="bold"
+            android:textColor="#0F2D5E" android:letterSpacing="0.06" android:layout_marginBottom="6dp"/>
+        <EditText android:id="@+id/etSubject"
+            android:layout_width="match_parent" android:layout_height="48dp"
+            android:hint="e.g., Mathematics"
+            android:background="@drawable/bg_input"
+            android:paddingStart="14dp" android:paddingEnd="14dp"
+            android:textColor="#0F2D5E" android:textColorHint="#94A3B8"
+            android:textSize="14sp" android:inputType="text"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Section -->
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="SECTION (OPTIONAL)" android:textSize="11sp" android:textStyle="bold"
+            android:textColor="#0F2D5E" android:letterSpacing="0.06" android:layout_marginBottom="6dp"/>
+        <EditText android:id="@+id/etSection"
+            android:layout_width="match_parent" android:layout_height="48dp"
+            android:hint="e.g., A, B, C"
+            android:background="@drawable/bg_input"
+            android:paddingStart="14dp" android:paddingEnd="14dp"
+            android:textColor="#0F2D5E" android:textColorHint="#94A3B8"
+            android:textSize="14sp" android:inputType="text"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Schedule Day -->
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="SCHEDULE DAY" android:textSize="11sp" android:textStyle="bold"
+            android:textColor="#0F2D5E" android:letterSpacing="0.06" android:layout_marginBottom="6dp"/>
+        <Spinner android:id="@+id/spinnerDay"
+            android:layout_width="match_parent" android:layout_height="48dp"
+            android:background="@drawable/bg_input"
+            android:paddingStart="14dp"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Start Time + End Time -->
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:layout_marginBottom="16dp">
+
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:orientation="vertical" android:layout_marginEnd="8dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="START TIME" android:textSize="11sp" android:textStyle="bold"
+                    android:textColor="#0F2D5E" android:letterSpacing="0.06" android:layout_marginBottom="6dp"/>
+                <EditText android:id="@+id/etStartTime"
+                    android:layout_width="match_parent" android:layout_height="48dp"
+                    android:hint="08:00" android:background="@drawable/bg_input"
+                    android:paddingStart="14dp" android:paddingEnd="14dp"
+                    android:textColor="#0F2D5E" android:textColorHint="#94A3B8"
+                    android:textSize="14sp" android:focusable="false" android:clickable="true"/>
+            </LinearLayout>
+
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:orientation="vertical" android:layout_marginStart="8dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="END TIME" android:textSize="11sp" android:textStyle="bold"
+                    android:textColor="#0F2D5E" android:letterSpacing="0.06" android:layout_marginBottom="6dp"/>
+                <EditText android:id="@+id/etEndTime"
+                    android:layout_width="match_parent" android:layout_height="48dp"
+                    android:hint="10:00" android:background="@drawable/bg_input"
+                    android:paddingStart="14dp" android:paddingEnd="14dp"
+                    android:textColor="#0F2D5E" android:textColorHint="#94A3B8"
+                    android:textSize="14sp" android:focusable="false" android:clickable="true"/>
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Academic Year -->
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="ACADEMIC YEAR" android:textSize="11sp" android:textStyle="bold"
+            android:textColor="#0F2D5E" android:letterSpacing="0.06" android:layout_marginBottom="6dp"/>
+        <EditText android:id="@+id/etAcademicYear"
+            android:layout_width="match_parent" android:layout_height="48dp"
+            android:hint="e.g., 2025-2026"
+            android:background="@drawable/bg_input"
+            android:paddingStart="14dp" android:paddingEnd="14dp"
+            android:textColor="#0F2D5E" android:textColorHint="#94A3B8"
+            android:textSize="14sp" android:inputType="text"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Assign Teacher -->
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="ASSIGN TEACHER *" android:textSize="11sp" android:textStyle="bold"
+            android:textColor="#0F2D5E" android:letterSpacing="0.06" android:layout_marginBottom="6dp"/>
+        <Spinner android:id="@+id/spinnerTeacher"
+            android:layout_width="match_parent" android:layout_height="48dp"
+            android:background="@drawable/bg_input"
+            android:paddingStart="14dp"
+            android:layout_marginBottom="8dp"/>
+
+    </LinearLayout>
+</ScrollView>
