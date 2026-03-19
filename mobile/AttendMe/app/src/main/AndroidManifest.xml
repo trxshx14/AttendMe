@@ -49,7 +49,7 @@
             android:name=".ui.admin.ManageClassesActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.admin.ManageClassesActivity"
+            android:name=".ui.admin.AdminReportsActivity"
             android:exported="false" />
 
         <!-- Old MainActivity — keep to avoid build errors until we remove it -->
