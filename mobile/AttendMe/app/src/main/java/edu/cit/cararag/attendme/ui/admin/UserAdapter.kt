@@ -12,6 +12,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.signature.ObjectKey
 import com.google.android.material.button.MaterialButton
 import de.hdodenhof.circleimageview.CircleImageView
 import edu.cit.cararag.attendme.R
@@ -80,10 +82,9 @@ class UserAdapter(
         )
         holder.btnToggle.text = if (isActive) "⏸" else "▶"
 
-        // Load profile picture
+        // Always bust cache so latest pic shows immediately after upload
         loadAvatar(holder, user)
 
-        // Tap avatar to change photo
         holder.frameAvatar.setOnClickListener {
             pendingUploadUserId = user.userId
             val intent = Intent(Intent.ACTION_PICK).apply { type = "image/*" }
@@ -95,16 +96,16 @@ class UserAdapter(
         holder.btnDelete.setOnClickListener { onDelete(user) }
     }
 
-    private fun loadAvatar(holder: UserViewHolder, user: User, bustCache: Boolean = false) {
+    private fun loadAvatar(holder: UserViewHolder, user: User) {
         if (!user.profilePicUrl.isNullOrBlank()) {
             holder.ivAvatar.visibility       = View.VISIBLE
             holder.layoutInitials.visibility = View.GONE
-            val url = if (bustCache) "${user.profilePicUrl}?t=${System.currentTimeMillis()}"
-            else user.profilePicUrl
+            // Use timestamp-based ObjectKey to force Glide to bypass all caches
             Glide.with(holder.ivAvatar.context)
-                .load(url)
+                .load(user.profilePicUrl)
+                .signature(ObjectKey(System.currentTimeMillis().toString()))
                 .skipMemoryCache(true)
-                .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)
+                .diskCacheStrategy(DiskCacheStrategy.NONE)
                 .placeholder(R.drawable.bg_circle_navy)
                 .error(R.drawable.bg_circle_navy)
                 .circleCrop()
@@ -119,7 +120,6 @@ class UserAdapter(
         }
     }
 
-    // Called from Activity when image is picked
     fun handleImageResult(uri: Uri) {
         val userId = pendingUploadUserId ?: return
         pendingUploadUserId = null
@@ -147,22 +147,24 @@ class UserAdapter(
                     .build()
 
                 val response = httpClient.newCall(request).execute()
+                val success  = response.isSuccessful
+
+                // Clear Glide disk cache on IO thread BEFORE refreshing
+                Glide.get(activity).clearDiskCache()
 
                 withContext(Dispatchers.Main) {
-                    if (response.isSuccessful) {
-                        // Clear Glide memory cache on main thread
-                        Glide.get(activity).clearMemory()
+                    // Clear Glide memory cache on main thread
+                    Glide.get(activity).clearMemory()
+                    if (success) {
                         Toast.makeText(activity, "Profile picture updated!", Toast.LENGTH_SHORT).show()
-                        onRefresh()
+                        onRefresh() // Reload list with fresh images
                     } else {
                         Toast.makeText(activity, "Failed to upload picture", Toast.LENGTH_SHORT).show()
                     }
                 }
 
-                // Clear Glide disk cache on background thread
-                Glide.get(activity).clearDiskCache()
-
                 tempFile.delete()
+
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(activity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
