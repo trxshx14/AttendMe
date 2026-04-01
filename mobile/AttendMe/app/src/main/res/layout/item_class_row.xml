@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="16dp">
+
+        <!-- Blue dot -->
+        <View
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:background="@drawable/bg_dot_navy"
+            android:layout_marginEnd="14dp"/>
+
+        <!-- Class info -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginEnd="12dp">
+
+            <TextView
+                android:id="@+id/tvClassName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Grade 10 — Sampaguita"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#0F2D5E"
+                android:layout_marginBottom="2dp"/>
+
+            <TextView
+                android:id="@+id/tvClassMeta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Math · 8:00 AM · 35 students"
+                android:textSize="12sp"
+                android:textColor="#64748B"/>
+        </LinearLayout>
+
+        <!-- Present chip + Ring -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvPresentChip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="● 0 present"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#0F2D5E"
+                android:background="@drawable/bg_chip_blue"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:layout_marginEnd="10dp"/>
+
+            <!-- Attendance % ring (simplified as text badge) -->
+            <FrameLayout
+                android:layout_width="48dp"
+                android:layout_height="48dp">
+
+                <ProgressBar
+                    android:id="@+id/progressRing"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:indeterminate="false"
+                    android:progress="75"
+                    android:rotation="-90"
+                    android:progressTint="#10B981"
+                    android:progressBackgroundTint="#E8EFF8"
+                    android:max="100"/>
+
+                <TextView
+                    android:id="@+id/tvRingPercent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="75%"
+                    android:textSize="9sp"
+                    android:textStyle="bold"
+                    android:textColor="#0F2D5E"/>
+            </FrameLayout>
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#F0F4FA"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"/>
+
+</LinearLayout>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="14dp">
+
+        <!-- Time chip -->
+        <TextView
+            android:id="@+id/tvSchedTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="8:00 AM"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#0F2D5E"
+            android:background="@drawable/bg_chip_blue"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="5dp"
+            android:layout_marginEnd="12dp"
+            android:minWidth="72dp"
+            android:gravity="center"/>
+
+        <!-- Class name & meta -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginEnd="10dp">
+
+            <TextView
+                android:id="@+id/tvSchedName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Grade 10 — Sampaguita"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#0F2D5E"
+                android:layout_marginBottom="2dp"/>
+
+            <TextView
+                android:id="@+id/tvSchedMeta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Math · 35 students"
+                android:textSize="11sp"
+                android:textColor="#64748B"/>
+        </LinearLayout>
+
+        <!-- Take button -->
+        <Button
+            android:id="@+id/btnSchedTake"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:text="Take"
+            android:textColor="#FFFFFF"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:backgroundTint="#0F2D5E"
+            android:stateListAnimator="@null"
+            android:paddingHorizontal="16dp"
+            app:cornerRadius="16dp"/>
+
+    </LinearLayout>
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#F0F4FA"
+        android:layout_marginHorizontal="14dp"/>
+
+</LinearLayout>

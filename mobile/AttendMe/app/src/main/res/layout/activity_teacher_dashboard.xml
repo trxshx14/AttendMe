@@ -1,44 +1,678 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="32dp"
-    android:background="#FFFFFF">
+    android:background="#F4F7FB"
+    android:fillViewport="true">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="🏫"
-        android:textSize="56sp"
-        android:layout_marginBottom="24dp"/>
+        android:orientation="vertical"
+        android:padding="16dp">
 
-    <TextView
-        android:id="@+id/tvWelcome"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Welcome, Teacher!"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        android:textColor="#0F2D5E"
-        android:layout_marginBottom="8dp"/>
+        <!-- ── Hero Banner ─────────────────────────────── -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="22dp"
+            app:cardElevation="12dp"
+            app:cardBackgroundColor="#0F2D5E">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Teacher Dashboard"
-        android:textSize="14sp"
-        android:textColor="#64748B"
-        android:layout_marginBottom="48dp"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="24dp">
 
-    <TextView
-        android:id="@+id/tvLogout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Sign Out"
-        android:textSize="14sp"
-        android:textColor="#DC2626"
-        android:padding="12dp"/>
+                <TextView
+                    android:id="@+id/tvGreeting"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="GOOD MORNING"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:textColor="#AAC4E0"
+                    android:letterSpacing="0.12"
+                    android:layout_marginBottom="4dp"/>
 
-</LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="4dp">
+
+                    <TextView
+                        android:id="@+id/tvTeacherName"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Teacher"
+                        android:textSize="28sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="👋"
+                        android:textSize="28sp"/>
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ready to take attendance for your classes today?"
+                    android:textSize="13sp"
+                    android:textColor="#AAC4E0"
+                    android:layout_marginBottom="16dp"/>
+
+                <!-- Date pill -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_date_pill"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="8dp"
+                    android:layout_marginBottom="0dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📅"
+                        android:textSize="13sp"
+                        android:layout_marginEnd="6dp"/>
+
+                    <TextView
+                        android:id="@+id/tvCurrentDate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Monday, April 1, 2026"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"/>
+                </LinearLayout>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- ── Next Class Banner ───────────────────────── -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardNextClass"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:visibility="gone"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="8dp"
+            app:cardBackgroundColor="#071A3E">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="18dp"
+                android:gravity="center_vertical">
+
+                <!-- Bell icon -->
+                <LinearLayout
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:gravity="center"
+                    android:background="@drawable/bg_icon_white_alpha"
+                    android:layout_marginEnd="14dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🔔"
+                        android:textSize="20sp"/>
+                </LinearLayout>
+
+                <!-- Class info -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginEnd="12dp">
+
+                    <TextView
+                        android:id="@+id/tvNextClassEyebrow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="YOUR NEXT CLASS"
+                        android:textSize="9sp"
+                        android:textStyle="bold"
+                        android:textColor="#AAC4E0"
+                        android:letterSpacing="0.1"
+                        android:layout_marginBottom="3dp"/>
+
+                    <TextView
+                        android:id="@+id/tvNextClassName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Grade 10 — Sampaguita"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginBottom="2dp"/>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🕐"
+                            android:textSize="11sp"
+                            android:layout_marginEnd="4dp"/>
+
+                        <TextView
+                            android:id="@+id/tvNextClassMeta"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="8:00 AM – 9:00 AM · 35 students"
+                            android:textSize="11sp"
+                            android:textColor="#AAC4E0"/>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- CTA button -->
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnNextTakeAttendance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:text="Take →"
+                    android:textColor="#0F2D5E"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:backgroundTint="#FFFFFF"
+                    android:paddingHorizontal="16dp"
+                    android:stateListAnimator="@null"
+                    app:cornerRadius="18dp"/>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- ── Quick Actions Row ───────────────────────── -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp"
+            android:gravity="center_vertical">
+
+            <Button
+                android:id="@+id/btnTakeAttendance"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1.4"
+                android:layout_marginEnd="8dp"
+                android:text="📋  Take Attendance"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:backgroundTint="#0F2D5E"
+                android:stateListAnimator="@null"
+                app:cornerRadius="12dp"/>
+
+            <Button
+                android:id="@+id/btnViewHistory"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="History"
+                android:textColor="#0F2D5E"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:backgroundTint="#FFFFFF"
+                android:stateListAnimator="@null"
+                app:cornerRadius="12dp"/>
+
+            <Button
+                android:id="@+id/btnReports"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:text="Reports"
+                android:textColor="#0F2D5E"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:backgroundTint="#FFFFFF"
+                android:stateListAnimator="@null"
+                app:cornerRadius="12dp"/>
+
+        </LinearLayout>
+
+        <!-- ── Stats Grid 2x2 ──────────────────────────── -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <!-- My Classes -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="#FFFFFF">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:background="@drawable/bg_stat_card_blue">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="📖" android:textSize="22sp" android:layout_marginBottom="6dp"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="MY CLASSES" android:textSize="9sp" android:textStyle="bold"
+                        android:textColor="#64748B" android:letterSpacing="0.06"/>
+                    <TextView android:id="@+id/tvStatClasses"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="0" android:textSize="28sp" android:textStyle="bold"
+                        android:textColor="#0F2D5E"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Total Students -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="#FFFFFF">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:background="@drawable/bg_stat_card_green">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="🎓" android:textSize="22sp" android:layout_marginBottom="6dp"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="TOTAL STUDENTS" android:textSize="9sp" android:textStyle="bold"
+                        android:textColor="#64748B" android:letterSpacing="0.06"/>
+                    <TextView android:id="@+id/tvStatStudents"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="0" android:textSize="28sp" android:textStyle="bold"
+                        android:textColor="#0F2D5E"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <!-- Present Today -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="#FFFFFF">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:background="@drawable/bg_stat_card_emerald">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="✅" android:textSize="22sp" android:layout_marginBottom="6dp"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="PRESENT TODAY" android:textSize="9sp" android:textStyle="bold"
+                        android:textColor="#64748B" android:letterSpacing="0.06"/>
+                    <TextView android:id="@+id/tvStatPresent"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="0" android:textSize="28sp" android:textStyle="bold"
+                        android:textColor="#0F2D5E"/>
+                    <TextView android:id="@+id/tvStatPresentSub"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="0% of marked"
+                        android:textSize="10sp" android:textColor="#94A3B8"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Absent / Late -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="#FFFFFF">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:background="@drawable/bg_stat_card_red">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="❌" android:textSize="22sp" android:layout_marginBottom="6dp"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="ABSENT / LATE" android:textSize="9sp" android:textStyle="bold"
+                        android:textColor="#64748B" android:letterSpacing="0.06"/>
+                    <TextView android:id="@+id/tvStatAbsentLate"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="0" android:textSize="28sp" android:textStyle="bold"
+                        android:textColor="#0F2D5E"/>
+                    <TextView android:id="@+id/tvStatAbsentLateSub"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="0 late · 0 absent"
+                        android:textSize="10sp" android:textColor="#94A3B8"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+
+        <!-- ── My Classes Card ─────────────────────────── -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="My Classes"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#0F2D5E"
+            android:layout_marginBottom="10dp"/>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="#FFFFFF">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Header -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="16dp"
+                    android:background="#FAFCFF">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="📖  My Classes"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F2D5E"/>
+
+                    <TextView
+                        android:id="@+id/btnTakeAttendanceInline"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Take Attendance ›"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="#1E50A2"
+                        android:background="@drawable/bg_chip_blue"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="6dp"/>
+                </LinearLayout>
+
+                <!-- Class rows dynamically populated -->
+                <LinearLayout
+                    android:id="@+id/llClassesList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"/>
+
+                <!-- Empty state -->
+                <TextView
+                    android:id="@+id/tvClassesEmpty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="No classes assigned yet."
+                    android:gravity="center"
+                    android:textColor="#94A3B8"
+                    android:textSize="13sp"
+                    android:padding="32dp"
+                    android:visibility="gone"/>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- ── Today's Schedule ────────────────────────── -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Today's Schedule"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#0F2D5E"
+            android:layout_marginBottom="10dp"/>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="#FFFFFF">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Header -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="16dp"
+                    android:background="#FAFCFF">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="🕐  Today's Schedule"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F2D5E"/>
+
+                    <TextView
+                        android:id="@+id/tvDateChip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Apr 1"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F2D5E"
+                        android:background="@drawable/bg_chip_blue"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="5dp"/>
+                </LinearLayout>
+
+                <!-- Schedule rows -->
+                <LinearLayout
+                    android:id="@+id/llScheduleList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"/>
+
+                <TextView
+                    android:id="@+id/tvScheduleEmpty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="No classes today."
+                    android:gravity="center"
+                    android:textColor="#94A3B8"
+                    android:textSize="13sp"
+                    android:padding="32dp"
+                    android:visibility="gone"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- ── Today's Summary ─────────────────────────── -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Today's Summary"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#0F2D5E"
+            android:layout_marginBottom="10dp"/>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="#FFFFFF">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Present -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical"
+                    android:paddingVertical="12dp">
+                    <View android:layout_width="9dp" android:layout_height="9dp"
+                        android:background="@drawable/bg_dot_green" android:layout_marginEnd="12dp"/>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="Present"
+                        android:textSize="14sp" android:textStyle="bold" android:textColor="#334155"/>
+                    <TextView android:id="@+id/tvSummaryPresent"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="0" android:textSize="13sp" android:textStyle="bold"
+                        android:textColor="#10B981" android:background="@drawable/bg_badge_green"
+                        android:paddingHorizontal="14dp" android:paddingVertical="3dp"/>
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F0F4FA"/>
+
+                <!-- Absent -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical"
+                    android:paddingVertical="12dp">
+                    <View android:layout_width="9dp" android:layout_height="9dp"
+                        android:background="@drawable/bg_dot_red" android:layout_marginEnd="12dp"/>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="Absent"
+                        android:textSize="14sp" android:textStyle="bold" android:textColor="#334155"/>
+                    <TextView android:id="@+id/tvSummaryAbsent"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="0" android:textSize="13sp" android:textStyle="bold"
+                        android:textColor="#EF4444" android:background="@drawable/bg_badge_red"
+                        android:paddingHorizontal="14dp" android:paddingVertical="3dp"/>
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F0F4FA"/>
+
+                <!-- Late -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical"
+                    android:paddingVertical="12dp">
+                    <View android:layout_width="9dp" android:layout_height="9dp"
+                        android:background="@drawable/bg_dot_yellow" android:layout_marginEnd="12dp"/>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="Late"
+                        android:textSize="14sp" android:textStyle="bold" android:textColor="#334155"/>
+                    <TextView android:id="@+id/tvSummaryLate"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="0" android:textSize="13sp" android:textStyle="bold"
+                        android:textColor="#F59E0B" android:background="@drawable/bg_badge_yellow"
+                        android:paddingHorizontal="14dp" android:paddingVertical="3dp"/>
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F0F4FA"/>
+
+                <!-- Excused -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical"
+                    android:paddingVertical="12dp">
+                    <View android:layout_width="9dp" android:layout_height="9dp"
+                        android:background="@drawable/bg_dot_purple" android:layout_marginEnd="12dp"/>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="Excused"
+                        android:textSize="14sp" android:textStyle="bold" android:textColor="#334155"/>
+                    <TextView android:id="@+id/tvSummaryExcused"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="0" android:textSize="13sp" android:textStyle="bold"
+                        android:textColor="#6366F1" android:background="@drawable/bg_badge_purple"
+                        android:paddingHorizontal="14dp" android:paddingVertical="3dp"/>
+                </LinearLayout>
+
+                <!-- Total -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="4dp">
+                    <View android:layout_width="match_parent" android:layout_height="2dp"
+                        android:background="#D6E0F0"
+                        android:layout_marginBottom="12dp"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="Total Marked"
+                        android:textSize="14sp" android:textStyle="bold" android:textColor="#0F2D5E"/>
+                    <TextView android:id="@+id/tvSummaryTotal"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="0" android:textSize="18sp" android:textStyle="bold"
+                        android:textColor="#0F2D5E"/>
+                </LinearLayout>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Sign Out -->
+        <Button
+            android:id="@+id/btnLogout"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Sign Out"
+            android:textColor="#DC2626"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:backgroundTint="#FEE2E2"
+            android:stateListAnimator="@null"
+            app:cornerRadius="12dp"
+            android:layout_marginBottom="24dp"/>
+
+    </LinearLayout>
+</ScrollView>
