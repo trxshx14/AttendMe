@@ -2,14 +2,81 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
     android:orientation="vertical"
-    android:background="#FFFFFF">
+    android:background="#F4F7FB"
+    android:padding="16dp">
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Take Attendance"
         android:textSize="22sp"
         android:textStyle="bold"
-        android:textColor="#0F2D5E"/>
+        android:textColor="#0F2D5E" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp">
+
+        <Spinner
+            android:id="@+id/spinnerGrade"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="4dp"
+            android:background="@android:drawable/btn_dropdown" />
+
+        <Spinner
+            android:id="@+id/spinnerSection"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1.5"
+            android:layout_marginEnd="4dp"
+            android:background="@android:drawable/btn_dropdown" />
+
+        <Button
+            android:id="@+id/btnDatePicker"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:text="Date"
+            android:textSize="10sp"
+            style="@style/Widget.AppCompat.Button.Small"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvCounts"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:text="P: 0 | A: 0 | L: 0 | Total: 0"
+        android:gravity="center"
+        android:textColor="#64748B"
+        android:textStyle="bold"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <Button android:id="@+id/btnMarkPresentAll" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="All Present" android:textColor="#10B981" style="@style/Widget.AppCompat.Button.Borderless"/>
+        <Button android:id="@+id/btnMarkAbsentAll" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="All Absent" android:textColor="#EF4444" style="@style/Widget.AppCompat.Button.Borderless"/>
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvStudents"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="8dp"/>
+
+    <Button
+        android:id="@+id/btnSaveAttendance"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:text="SAVE ATTENDANCE"
+        android:backgroundTint="#0F2D5E"
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="8dp"/>
+
 </LinearLayout>

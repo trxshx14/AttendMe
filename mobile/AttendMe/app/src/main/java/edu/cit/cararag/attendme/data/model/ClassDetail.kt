@@ -9,12 +9,12 @@ data class ClassDetail(
     val scheduleTime: String?,
     val scheduleTimeEnd: String?,
     val scheduleDay: String?,
-    val studentCount: Int,
+    val studentCount: Int = 0,
     var presentCount: Int = 0,
     var absentCount: Int = 0,
     var lateCount: Int = 0,
     var excusedCount: Int = 0,
     var attendanceRate: Int = 0,
     var grade: String = "",
-    var sectionLabel: String? = null
+    var sectionLabel: String? = null,
 )
