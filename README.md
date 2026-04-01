@@ -19,24 +19,25 @@ Built using a **modern full-stack architecture**, AttendMe integrates **web and 
 
 # 🛠️ Technology Stack
 
-**Frontend**
-* React
+### Backend
+* **Framework:** Spring Boot
+* **Language:** Java
 
-**Backend**
-* Spring Boot
+### Frontend
+* **Framework:** React
 
-**Mobile Application**
-* Kotlin (Android Studio)
+### Mobile Application
+* **Language:** Kotlin (Android Studio)
 
-**Database**
-* Supabase
+### Database
+* **Platform:** Supabase
 
-**Deployment**
-* Render
+### Deployment
+* **Platform:** Render
 
-**Version Control**
-* Git
-* GitHub
+### Version Control
+* **Tool:** Git
+* **Platform:** GitHub
 
 ---
 
