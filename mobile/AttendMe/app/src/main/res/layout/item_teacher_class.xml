@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="16dp"
+    android:gravity="center_vertical"
+    android:background="?attr/selectableItemBackground">
+
+    <!-- Dot -->
+    <View
+        android:layout_width="8dp"
+        android:layout_height="8dp"
+        android:background="@drawable/bg_circle_navy"
+        android:layout_marginEnd="12dp"/>
+
+    <!-- Info -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvTCClassName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Grade 9 — Integrity"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#0F2D5E"/>
+
+        <TextView
+            android:id="@+id/tvTCMeta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Science · 10:00 AM · 35 students"
+            android:textSize="12sp"
+            android:textColor="#64748B"
+            android:layout_marginTop="2dp"/>
+    </LinearLayout>
+
+    <!-- Present chip -->
+    <TextView
+        android:id="@+id/tvTCPresent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="● 0 present"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:textColor="#0F2D5E"
+        android:background="@drawable/bg_detail_chip_blue"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
+        android:layout_marginEnd="8dp"/>
+
+    <!-- Rate -->
+    <TextView
+        android:id="@+id/tvTCRate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0%"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/bg_count_badge"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"/>
+
+</LinearLayout>

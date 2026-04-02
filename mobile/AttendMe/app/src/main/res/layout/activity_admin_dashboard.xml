@@ -30,86 +30,125 @@
                     android:id="@+id/tvGreeting"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="GOOD MORNING"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:textColor="#AAC4E0"
+                    android:layout_marginBottom="4dp"
                     android:letterSpacing="0.1"
-                    android:layout_marginBottom="4dp"/>
+                    android:text="GOOD MORNING"
+                    android:textColor="#AAC4E0"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/tvAdminName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
                     android:text="Administrator"
-                    android:textSize="26sp"
-                    android:textStyle="bold"
                     android:textColor="#FFFFFF"
-                    android:layout_marginBottom="4dp"/>
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="20dp"
                     android:text="Here's what's happening with your school today."
-                    android:textSize="13sp"
                     android:textColor="#AAC4E0"
-                    android:layout_marginBottom="20dp"/>
+                    android:textSize="13sp" />
 
                 <!-- Mini Stats Row -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
                     android:background="@drawable/bg_mini_stats"
+                    android:orientation="horizontal"
                     android:padding="12dp">
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:gravity="center">
-                        <TextView android:id="@+id/tvMiniStudents"
-                            android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="0" android:textSize="22sp" android:textStyle="bold"
-                            android:textColor="#FFFFFF"/>
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="STUDENTS" android:textSize="10sp" android:textStyle="bold"
-                            android:textColor="#AAC4E0" android:letterSpacing="0.05"/>
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvMiniStudents"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textColor="#FFFFFF"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:letterSpacing="0.05"
+                            android:text="STUDENTS"
+                            android:textColor="#AAC4E0"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
 
-                    <View android:layout_width="1dp" android:layout_height="32dp" android:background="#3A5A8A"/>
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="32dp"
+                        android:background="#3A5A8A" />
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:gravity="center">
-                        <TextView android:id="@+id/tvMiniClasses"
-                            android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="0" android:textSize="22sp" android:textStyle="bold"
-                            android:textColor="#FFFFFF"/>
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="CLASSES" android:textSize="10sp" android:textStyle="bold"
-                            android:textColor="#AAC4E0" android:letterSpacing="0.05"/>
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvMiniClasses"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textColor="#FFFFFF"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:letterSpacing="0.05"
+                            android:text="CLASSES"
+                            android:textColor="#AAC4E0"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
 
-                    <View android:layout_width="1dp" android:layout_height="32dp" android:background="#3A5A8A"/>
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="32dp"
+                        android:background="#3A5A8A" />
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:gravity="center">
-                        <TextView android:id="@+id/tvMiniTeachers"
-                            android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="0" android:textSize="22sp" android:textStyle="bold"
-                            android:textColor="#FFFFFF"/>
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="TEACHERS" android:textSize="10sp" android:textStyle="bold"
-                            android:textColor="#AAC4E0" android:letterSpacing="0.05"/>
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvMiniTeachers"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textColor="#FFFFFF"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:letterSpacing="0.05"
+                            android:text="TEACHERS"
+                            android:textColor="#AAC4E0"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
 
                 </LinearLayout>
@@ -127,18 +166,38 @@
                 android:layout_width="0dp" android:layout_height="wrap_content"
                 android:layout_weight="1" android:layout_marginEnd="6dp"
                 app:cardCornerRadius="16dp" app:cardElevation="2dp" app:cardBackgroundColor="#FFFFFF">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:orientation="vertical" android:padding="16dp"
-                    android:background="@drawable/bg_stat_card_left">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="🎓" android:textSize="24sp" android:layout_marginBottom="8dp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="STUDENTS" android:textSize="10sp" android:textStyle="bold"
-                        android:textColor="#64748B" android:letterSpacing="0.06"/>
-                    <TextView android:id="@+id/tvStatStudents"
-                        android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="0" android:textSize="28sp" android:textStyle="bold"
-                        android:textColor="#0F2D5E"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_stat_card_left"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:text="🎓"
+                        android:textSize="24sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:letterSpacing="0.06"
+                        android:text="STUDENTS"
+                        android:textColor="#64748B"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvStatStudents"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textColor="#0F2D5E"
+                        android:textSize="28sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
