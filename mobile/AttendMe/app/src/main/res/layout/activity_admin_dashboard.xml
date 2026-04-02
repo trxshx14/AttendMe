@@ -174,12 +174,13 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                    <ImageView
+                        android:id="@+id/ivStudentIcon"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
                         android:layout_marginBottom="8dp"
-                        android:text="🎓"
-                        android:textSize="24sp" />
+                        android:src="@drawable/ic_student"
+                        app:tint="#0F2D5E" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -208,8 +209,13 @@
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
                     android:orientation="vertical" android:padding="16dp"
                     android:background="@drawable/bg_stat_card_left">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="👤" android:textSize="24sp" android:layout_marginBottom="8dp"/>
+                    <ImageView
+                        android:id="@+id/ivTeacherIcon"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginBottom="8dp"
+                        android:src="@drawable/ic_teacher"
+                        app:tint="#0F2D5E" />
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                         android:text="TEACHERS" android:textSize="10sp" android:textStyle="bold"
                         android:textColor="#64748B" android:letterSpacing="0.06"/>
@@ -235,8 +241,12 @@
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
                     android:orientation="vertical" android:padding="16dp"
                     android:background="@drawable/bg_stat_card_left">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="📚" android:textSize="24sp" android:layout_marginBottom="8dp"/>
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginBottom="8dp"
+                        android:src="@drawable/baseline_library_books_24"
+                        app:tint="#0F2D5E" />
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                         android:text="CLASSES" android:textSize="10sp" android:textStyle="bold"
                         android:textColor="#64748B" android:letterSpacing="0.06"/>
@@ -254,8 +264,12 @@
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
                     android:orientation="vertical" android:padding="16dp"
                     android:background="@drawable/bg_stat_card_left">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="📊" android:textSize="24sp" android:layout_marginBottom="8dp"/>
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginBottom="8dp"
+                        android:src="@drawable/baseline_auto_graph_24"
+                        app:tint="#0F2D5E" />
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                         android:text="AVG CLASS SIZE" android:textSize="10sp" android:textStyle="bold"
                         android:textColor="#64748B" android:letterSpacing="0.06"/>
@@ -291,8 +305,11 @@
                 <LinearLayout android:layout_width="48dp" android:layout_height="48dp"
                     android:background="@drawable/bg_icon_navy" android:gravity="center"
                     android:layout_marginEnd="16dp">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="👥" android:textSize="22sp"/>
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/baseline_3p_24"
+                        app:tint="#ffff" />
                 </LinearLayout>
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
                     android:layout_weight="1" android:orientation="vertical">
@@ -321,8 +338,11 @@
                 <LinearLayout android:layout_width="48dp" android:layout_height="48dp"
                     android:background="@drawable/bg_icon_navy" android:gravity="center"
                     android:layout_marginEnd="16dp">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="📚" android:textSize="22sp"/>
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/baseline_library_books_24"
+                        app:tint="#ffff" />
                 </LinearLayout>
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
                     android:layout_weight="1" android:orientation="vertical">
@@ -351,8 +371,14 @@
                 <LinearLayout android:layout_width="48dp" android:layout_height="48dp"
                     android:background="@drawable/bg_icon_navy" android:gravity="center"
                     android:layout_marginEnd="16dp">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="📊" android:textSize="22sp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:drawableStart="@drawable/baseline_auto_graph_24"
+                        android:drawablePadding="8dp"
+                        android:gravity="center_vertical"
+                        app:drawableTint="#FFFF" />
                 </LinearLayout>
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
                     android:layout_weight="1" android:orientation="vertical">
