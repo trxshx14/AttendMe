@@ -80,9 +80,21 @@ class UserAdapter(
         holder.tvStatus.setBackgroundResource(
             if (isActive) R.drawable.bg_status_active else R.drawable.bg_status_inactive
         )
-        holder.btnToggle.text = if (isActive) "⏸" else "▶"
 
-        // Always bust cache so latest pic shows immediately after upload
+        // --- FIX STARTS HERE ---
+        // 1. Clear the text so the emoji disappears
+        holder.btnToggle.text = ""
+
+        // 2. Set the vector icon based on the user's status
+        if (isActive) {
+            holder.btnToggle.setIconResource(R.drawable.ic_pause_standard)
+        } else {
+            // If you have a play arrow icon, use it here.
+            // Otherwise, it will stay as the pause icon for now.
+            holder.btnToggle.setIconResource(R.drawable.ic_pause_standard)
+        }
+        // --- FIX ENDS HERE ---
+
         loadAvatar(holder, user)
 
         holder.frameAvatar.setOnClickListener {
