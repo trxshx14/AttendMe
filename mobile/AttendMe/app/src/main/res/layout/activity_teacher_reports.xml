@@ -1,27 +1,298 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:background="#F4F7FB">
 
-    <TextView
-        android:id="@+id/titleTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Teacher Reports"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="16dp"
-        android:textColor="#000000"/>
-
-    <ListView
-        android:id="@+id/reportsListView"
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:divider="#CCCCCC"
-        android:dividerHeight="1dp"
-        android:footerDividersEnabled="false"
-        android:headerDividersEnabled="false" />
+        android:layout_height="?attr/actionBarSize"
+        android:background="#0F2D5E"
+        app:title="Attendance Reports"
+        app:titleTextColor="#FFFFFF"
+        app:navigationIcon="@drawable/ic_back"
+        app:navigationIconTint="#FFFFFF"/>
 
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:padding="16dp">
+
+            <!-- Error -->
+            <TextView android:id="@+id/tvError"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:background="@drawable/bg_error" android:padding="12dp"
+                android:textColor="#DC2626" android:textSize="13sp"
+                android:visibility="gone" android:layout_marginBottom="12dp"/>
+
+            <!-- Controls Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="16dp" app:cardElevation="2dp" app:cardBackgroundColor="#FFFFFF">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" android:padding="16dp">
+
+                    <!-- Class -->
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="CLASS" android:textSize="11sp" android:textStyle="bold"
+                        android:textColor="#0F2D5E" android:letterSpacing="0.06" android:layout_marginBottom="6dp"/>
+                    <Spinner android:id="@+id/spinnerClass"
+                        android:layout_width="match_parent" android:layout_height="48dp"
+                        android:background="@drawable/bg_input" android:paddingStart="14dp"
+                        android:layout_marginBottom="14dp"/>
+
+                    <!-- Period -->
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="PERIOD" android:textSize="11sp" android:textStyle="bold"
+                        android:textColor="#0F2D5E" android:letterSpacing="0.06" android:layout_marginBottom="6dp"/>
+                    <Spinner android:id="@+id/spinnerPeriod"
+                        android:layout_width="match_parent" android:layout_height="48dp"
+                        android:background="@drawable/bg_input" android:paddingStart="14dp"
+                        android:layout_marginBottom="14dp"/>
+
+                    <!-- Custom date range (shown only when Custom is selected) -->
+                    <LinearLayout android:id="@+id/layoutCustomDates"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:orientation="horizontal" android:layout_marginBottom="14dp"
+                        android:visibility="gone">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                            android:layout_weight="1" android:orientation="vertical" android:layout_marginEnd="8dp">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="FROM" android:textSize="11sp" android:textStyle="bold"
+                                android:textColor="#0F2D5E" android:letterSpacing="0.06" android:layout_marginBottom="6dp"/>
+                            <EditText android:id="@+id/etCustomFrom"
+                                android:layout_width="match_parent" android:layout_height="48dp"
+                                android:hint="Start date" android:background="@drawable/bg_input"
+                                android:paddingStart="14dp" android:paddingEnd="14dp"
+                                android:textColor="#0F2D5E" android:textColorHint="#94A3B8"
+                                android:textSize="13sp" android:focusable="false" android:clickable="true"/>
+                        </LinearLayout>
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                            android:layout_weight="1" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="TO" android:textSize="11sp" android:textStyle="bold"
+                                android:textColor="#0F2D5E" android:letterSpacing="0.06" android:layout_marginBottom="6dp"/>
+                            <EditText android:id="@+id/etCustomTo"
+                                android:layout_width="match_parent" android:layout_height="48dp"
+                                android:hint="End date" android:background="@drawable/bg_input"
+                                android:paddingStart="14dp" android:paddingEnd="14dp"
+                                android:textColor="#0F2D5E" android:textColorHint="#94A3B8"
+                                android:textSize="13sp" android:focusable="false" android:clickable="true"/>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Date range preview -->
+                    <TextView android:id="@+id/tvDateRangePreview"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="📅 Mar 16 — Mar 22, 2026"
+                        android:textSize="12sp" android:textColor="#0F2D5E"
+                        android:background="@drawable/bg_detail_chip_blue"
+                        android:paddingStart="12dp" android:paddingEnd="12dp"
+                        android:paddingTop="6dp" android:paddingBottom="6dp"
+                        android:layout_marginBottom="14dp"/>
+
+                    <!-- Generate Button -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnGenerate"
+                        android:layout_width="match_parent" android:layout_height="48dp"
+                        android:text="📊 Generate Report"
+                        android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold"
+                        android:backgroundTint="#0F2D5E" android:stateListAnimator="@null"
+                        app:cornerRadius="12dp"/>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Loading -->
+            <ProgressBar android:id="@+id/progressBar"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="center" android:indeterminateTint="#0F2D5E"
+                android:visibility="gone" android:layout_marginBottom="16dp"/>
+
+            <!-- Placeholder (before generate) -->
+            <LinearLayout android:id="@+id/layoutPlaceholder"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:gravity="center"
+                android:padding="48dp" android:background="@drawable/bg_empty_state">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="📊" android:textSize="48sp" android:layout_marginBottom="12dp"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="No Report Generated Yet"
+                    android:textSize="16sp" android:textStyle="bold"
+                    android:textColor="#0F2D5E" android:layout_marginBottom="8dp"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Select a class and period above, then tap Generate Report."
+                    android:textSize="13sp" android:textColor="#64748B" android:gravity="center"/>
+            </LinearLayout>
+
+            <!-- Report Output (hidden until generated) -->
+            <LinearLayout android:id="@+id/layoutReport"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:visibility="gone">
+
+                <!-- Summary Cards Row 1 -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:layout_marginBottom="8dp">
+
+                    <androidx.cardview.widget.CardView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:layout_marginEnd="6dp"
+                        app:cardCornerRadius="14dp" app:cardElevation="2dp" app:cardBackgroundColor="#FFFFFF">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                            android:orientation="vertical" android:padding="14dp"
+                            android:background="@drawable/bg_stat_card_left">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="TOTAL" android:textSize="9sp" android:textStyle="bold"
+                                android:textColor="#64748B" android:letterSpacing="0.06"/>
+                            <TextView android:id="@+id/tvSumTotal"
+                                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="0" android:textSize="26sp" android:textStyle="bold"
+                                android:textColor="#0F2D5E"/>
+                        </LinearLayout>
+                    </androidx.cardview.widget.CardView>
+
+                    <androidx.cardview.widget.CardView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        app:cardCornerRadius="14dp" app:cardElevation="2dp" app:cardBackgroundColor="#FFFFFF">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                            android:orientation="vertical" android:padding="14dp"
+                            android:background="@drawable/bg_stat_present">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="PRESENT" android:textSize="9sp" android:textStyle="bold"
+                                android:textColor="#64748B" android:letterSpacing="0.06"/>
+                            <TextView android:id="@+id/tvSumPresent"
+                                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="0" android:textSize="26sp" android:textStyle="bold"
+                                android:textColor="#10B981"/>
+                            <TextView android:id="@+id/tvSumPresentPct"
+                                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="0%" android:textSize="12sp" android:textColor="#1E50A2"/>
+                        </LinearLayout>
+                    </androidx.cardview.widget.CardView>
+                </LinearLayout>
+
+                <!-- Summary Cards Row 2 -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:layout_marginBottom="8dp">
+
+                    <androidx.cardview.widget.CardView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:layout_marginEnd="4dp"
+                        app:cardCornerRadius="14dp" app:cardElevation="2dp" app:cardBackgroundColor="#FFFFFF">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                            android:orientation="vertical" android:padding="14dp"
+                            android:background="@drawable/bg_stat_absent">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="ABSENT" android:textSize="9sp" android:textStyle="bold"
+                                android:textColor="#64748B" android:letterSpacing="0.06"/>
+                            <TextView android:id="@+id/tvSumAbsent"
+                                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="0" android:textSize="26sp" android:textStyle="bold"
+                                android:textColor="#EF4444"/>
+                            <TextView android:id="@+id/tvSumAbsentPct"
+                                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="0%" android:textSize="12sp" android:textColor="#1E50A2"/>
+                        </LinearLayout>
+                    </androidx.cardview.widget.CardView>
+
+                    <androidx.cardview.widget.CardView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:layout_marginStart="4dp" android:layout_marginEnd="4dp"
+                        app:cardCornerRadius="14dp" app:cardElevation="2dp" app:cardBackgroundColor="#FFFFFF">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                            android:orientation="vertical" android:padding="14dp"
+                            android:background="@drawable/bg_stat_late">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="LATE" android:textSize="9sp" android:textStyle="bold"
+                                android:textColor="#64748B" android:letterSpacing="0.06"/>
+                            <TextView android:id="@+id/tvSumLate"
+                                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="0" android:textSize="26sp" android:textStyle="bold"
+                                android:textColor="#F59E0B"/>
+                            <TextView android:id="@+id/tvSumLatePct"
+                                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="0%" android:textSize="12sp" android:textColor="#1E50A2"/>
+                        </LinearLayout>
+                    </androidx.cardview.widget.CardView>
+
+                    <androidx.cardview.widget.CardView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:layout_marginStart="4dp"
+                        app:cardCornerRadius="14dp" app:cardElevation="2dp" app:cardBackgroundColor="#FFFFFF">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                            android:orientation="vertical" android:padding="14dp"
+                            android:background="@drawable/bg_stat_excused">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="EXCUSED" android:textSize="9sp" android:textStyle="bold"
+                                android:textColor="#64748B" android:letterSpacing="0.06"/>
+                            <TextView android:id="@+id/tvSumExcused"
+                                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="0" android:textSize="26sp" android:textStyle="bold"
+                                android:textColor="#8B5CF6"/>
+                            <TextView android:id="@+id/tvSumExcusedPct"
+                                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="0%" android:textSize="12sp" android:textColor="#1E50A2"/>
+                        </LinearLayout>
+                    </androidx.cardview.widget.CardView>
+                </LinearLayout>
+
+                <!-- Avg Attendance Card -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    app:cardCornerRadius="14dp" app:cardElevation="2dp" app:cardBackgroundColor="#FFFFFF">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:orientation="horizontal" android:padding="16dp" android:gravity="center_vertical"
+                        android:background="@drawable/bg_stat_card_left">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                            android:layout_weight="1" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="AVG. ATTENDANCE" android:textSize="9sp" android:textStyle="bold"
+                                android:textColor="#64748B" android:letterSpacing="0.06"/>
+                            <TextView android:id="@+id/tvAvgAttendance"
+                                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="0%" android:textSize="28sp" android:textStyle="bold"
+                                android:textColor="#0F2D5E"/>
+                        </LinearLayout>
+                        <!-- Mini progress bar -->
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                            android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                            <FrameLayout android:layout_width="match_parent" android:layout_height="8dp"
+                                android:background="@drawable/bg_detail_chip"
+                                android:layout_marginBottom="4dp">
+                                <View android:id="@+id/viewRateBar"
+                                    android:layout_width="0dp" android:layout_height="match_parent"
+                                    android:background="#10B981"/>
+                            </FrameLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- Student Breakdown -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    app:cardCornerRadius="16dp" app:cardElevation="2dp" app:cardBackgroundColor="#FFFFFF">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:orientation="vertical">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                            android:orientation="horizontal" android:padding="16dp"
+                            android:background="#FAFCFF" android:gravity="center_vertical">
+                            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                                android:layout_weight="1" android:text="👥 Student Breakdown"
+                                android:textSize="14sp" android:textStyle="bold" android:textColor="#0F2D5E"/>
+                        </LinearLayout>
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvStudentBreakdown"
+                            android:layout_width="match_parent" android:layout_height="wrap_content"
+                            android:nestedScrollingEnabled="false" android:padding="8dp"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 </LinearLayout>
