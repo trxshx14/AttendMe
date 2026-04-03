@@ -64,7 +64,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="8dp"
+                        android:layout_marginBottom="12dp"
                         android:text="Ready to take attendance for your classes today."
                         android:textColor="#AAC4E0"
                         android:textSize="13sp" />
@@ -120,7 +120,8 @@
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnTakeAttendanceNext" android:layout_width="wrap_content" android:layout_height="36dp"
                     android:text="Take →" android:textSize="12sp" android:textColor="#0F2D5E" android:backgroundTint="#FFFFFF"
-                    android:stateListAnimator="@null" app:cornerRadius="20dp"/>
+                    android:stateListAnimator="@null" app:cornerRadius="20dp"
+                    android:textAllCaps="false"/>
             </LinearLayout>
 
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
@@ -145,66 +146,80 @@
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnTakeAttendance"
+                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
                         android:layout_width="0dp"
-                        android:layout_height="60dp"
+                        android:layout_height="95dp"
                         android:layout_weight="1"
-                        android:layout_marginEnd="6dp"
+                        android:layout_marginEnd="8dp"
                         android:backgroundTint="#0F2D5E"
-                        android:insetTop="0dp"
-                        android:insetBottom="10dp"
-                        android:padding="0dp"
-                        android:text="Mark Attendance"
+                        android:padding="8dp"
+                        android:text="Attendance\n➔"
                         android:textColor="#FFFFFF"
                         android:textSize="10sp"
-                        app:cornerRadius="12dp" />
+                        android:textAllCaps="false"
+                        app:cornerRadius="16dp"
+                        app:icon="@drawable/ic_student"
+                        app:iconGravity="top"
+                        app:iconSize="28dp"
+                        app:iconTint="#FFFFFF" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnViewHistory"
+                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
                         android:layout_width="0dp"
-                        android:layout_height="60dp"
+                        android:layout_height="95dp"
                         android:layout_weight="1"
-                        android:layout_marginEnd="6dp"
+                        android:layout_marginEnd="8dp"
                         android:backgroundTint="#0F2D5E"
-                        android:insetTop="0dp"
-                        android:insetBottom="10dp"
-                        android:text="History"
+                        android:padding="8dp"
+                        android:text="History\n➔"
                         android:textColor="#FFFFFF"
                         android:textSize="10sp"
-                        app:cornerRadius="12dp" />
+                        android:textAllCaps="false"
+                        app:cornerRadius="16dp"
+                        app:icon="@drawable/ic_calendar_event"
+                        app:iconGravity="top"
+                        app:iconSize="28dp"
+                        app:iconTint="#FFFFFF" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnViewReports"
+                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
                         android:layout_width="0dp"
-                        android:layout_height="60dp"
+                        android:layout_height="95dp"
                         android:layout_weight="1"
                         android:backgroundTint="#0F2D5E"
-                        android:insetTop="0dp"
-                        android:insetBottom="10dp"
-                        android:text="Reports"
+                        android:padding="8dp"
+                        android:text="Reports\n➔"
                         android:textColor="#FFFFFF"
                         android:textSize="10sp"
-                        app:cornerRadius="12dp" />
+                        android:textAllCaps="false"
+                        app:cornerRadius="16dp"
+                        app:icon="@drawable/ic_graph_bar"
+                        app:iconGravity="top"
+                        app:iconSize="28dp"
+                        app:iconTint="#FFFFFF" />
                 </LinearLayout>
 
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
                     android:orientation="horizontal" android:layout_marginBottom="8dp">
                     <androidx.cardview.widget.CardView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginEnd="6dp"
                         app:cardCornerRadius="14dp" app:cardElevation="2dp" app:cardBackgroundColor="#FFFFFF">
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="14dp" android:background="@drawable/bg_stat_card_left">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="14dp">
                             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CLASSES" android:textSize="9sp" android:textStyle="bold" android:textColor="#64748B" android:letterSpacing="0.06"/>
                             <TextView android:id="@+id/tvStatClasses" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="24sp" android:textStyle="bold" android:textColor="#0F2D5E"/>
                         </LinearLayout>
                     </androidx.cardview.widget.CardView>
                     <androidx.cardview.widget.CardView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginEnd="6dp"
                         app:cardCornerRadius="14dp" app:cardElevation="2dp" app:cardBackgroundColor="#FFFFFF">
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="14dp" android:background="@drawable/bg_stat_card_left">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="14dp">
                             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="STUDENTS" android:textSize="9sp" android:textStyle="bold" android:textColor="#64748B" android:letterSpacing="0.06"/>
                             <TextView android:id="@+id/tvStatStudents" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="24sp" android:textStyle="bold" android:textColor="#0F2D5E"/>
                         </LinearLayout>
                     </androidx.cardview.widget.CardView>
                     <androidx.cardview.widget.CardView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
                         app:cardCornerRadius="14dp" app:cardElevation="2dp" app:cardBackgroundColor="#FFFFFF">
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="14dp" android:background="@drawable/bg_stat_card_left">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="14dp">
                             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="PRESENT" android:textSize="9sp" android:textStyle="bold" android:textColor="#64748B" android:letterSpacing="0.06"/>
                             <TextView android:id="@+id/tvStatPresent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="24sp" android:textStyle="bold" android:textColor="#0F2D5E"/>
                         </LinearLayout>
@@ -215,21 +230,21 @@
                     android:orientation="horizontal" android:layout_marginBottom="16dp">
                     <androidx.cardview.widget.CardView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginEnd="6dp"
                         app:cardCornerRadius="14dp" app:cardElevation="2dp" app:cardBackgroundColor="#FFFFFF">
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="14dp" android:background="@drawable/bg_stat_card_left">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="14dp">
                             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="ABSENT" android:textSize="9sp" android:textStyle="bold" android:textColor="#64748B" android:letterSpacing="0.06"/>
                             <TextView android:id="@+id/tvStatAbsent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="24sp" android:textStyle="bold" android:textColor="#0F2D5E"/>
                         </LinearLayout>
                     </androidx.cardview.widget.CardView>
                     <androidx.cardview.widget.CardView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginEnd="6dp"
                         app:cardCornerRadius="14dp" app:cardElevation="2dp" app:cardBackgroundColor="#FFFFFF">
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="14dp" android:background="@drawable/bg_stat_card_left">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="14dp">
                             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="LATE" android:textSize="9sp" android:textStyle="bold" android:textColor="#64748B" android:letterSpacing="0.06"/>
                             <TextView android:id="@+id/tvStatLate" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="24sp" android:textStyle="bold" android:textColor="#0F2D5E"/>
                         </LinearLayout>
                     </androidx.cardview.widget.CardView>
                     <androidx.cardview.widget.CardView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
                         app:cardCornerRadius="14dp" app:cardElevation="2dp" app:cardBackgroundColor="#FFFFFF">
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="14dp" android:background="@drawable/bg_stat_card_left">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="14dp">
                             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="EXCUSED" android:textSize="9sp" android:textStyle="bold" android:textColor="#64748B" android:letterSpacing="0.06"/>
                             <TextView android:id="@+id/tvStatExcused" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="24sp" android:textStyle="bold" android:textColor="#0F2D5E"/>
                         </LinearLayout>
@@ -240,7 +255,6 @@
                     android:layout_width="match_parent" android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp" app:cardCornerRadius="16dp" app:cardElevation="2dp" app:cardBackgroundColor="#FFFFFF">
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
-
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -271,11 +285,13 @@
                                 android:text="Mark Attendance"
                                 android:textColor="#1E50A2"
                                 android:textSize="11sp"
+                                android:textAllCaps="false"
                                 app:cornerRadius="8dp" />
                         </LinearLayout>
 
                         <androidx.recyclerview.widget.RecyclerView
                             android:id="@+id/rvMyClasses" android:layout_width="match_parent" android:layout_height="wrap_content" android:nestedScrollingEnabled="false"/>
+
                         <LinearLayout android:id="@+id/layoutNoClasses" android:layout_width="match_parent" android:layout_height="wrap_content"
                             android:gravity="center" android:padding="32dp" android:visibility="gone">
                             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
@@ -296,29 +312,82 @@
                                 android:text="Today's Summary"
                                 android:textSize="14sp"
                                 android:textStyle="bold"
-                                android:textColor="#0F2D5E"
-                                android:gravity="center_vertical"
-                                android:drawableStart="@drawable/baseline_auto_graph_24"
-                                android:drawablePadding="8dp"
-                                app:drawableTint="#0F2D5E" />
+                                android:textColor="#0F2D5E" />
                         </LinearLayout>
+
                         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
                             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="8dp">
                                 <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Present" android:textColor="#64748B"/>
-                                <TextView android:id="@+id/tvSummaryPresent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textStyle="bold" android:textColor="#0F2D5E"/>
+                                <TextView
+                                    android:id="@+id/tvSummaryPresent"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="0"
+                                    android:textStyle="bold"
+                                    android:textColor="#008000"
+                                    android:background="@drawable/bg_stat_present"
+                                    android:paddingStart="12dp"
+                                    android:paddingEnd="12dp"
+                                    android:paddingTop="4dp"
+                                    android:paddingBottom="4dp"
+                                    android:minWidth="32dp"
+                                    android:gravity="center" />
                             </LinearLayout>
+
                             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="8dp">
                                 <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Absent" android:textColor="#64748B"/>
-                                <TextView android:id="@+id/tvSummaryAbsent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textStyle="bold" android:textColor="#0F2D5E"/>
+                                <TextView
+                                    android:id="@+id/tvSummaryAbsent"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="0"
+                                    android:textStyle="bold"
+                                    android:textColor="#DC2626"
+                                    android:background="@drawable/bg_stat_absent"
+                                    android:paddingStart="12dp"
+                                    android:paddingEnd="12dp"
+                                    android:paddingTop="4dp"
+                                    android:paddingBottom="4dp"
+                                    android:minWidth="32dp"
+                                    android:gravity="center" />
                             </LinearLayout>
+
                             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="8dp">
                                 <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Late" android:textColor="#64748B"/>
-                                <TextView android:id="@+id/tvSummaryLate" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textStyle="bold" android:textColor="#0F2D5E"/>
+                                <TextView
+                                    android:id="@+id/tvSummaryLate"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="0"
+                                    android:textStyle="bold"
+                                    android:textColor="#FFA500"
+                                    android:background="@drawable/bg_stat_late"
+                                    android:paddingStart="12dp"
+                                    android:paddingEnd="12dp"
+                                    android:paddingTop="4dp"
+                                    android:paddingBottom="4dp"
+                                    android:minWidth="32dp"
+                                    android:gravity="center" />
                             </LinearLayout>
+
                             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="8dp">
                                 <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Excused" android:textColor="#64748B"/>
-                                <TextView android:id="@+id/tvSummaryExcused" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textStyle="bold" android:textColor="#0F2D5E"/>
+                                <TextView
+                                    android:id="@+id/tvSummaryExcused"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="0"
+                                    android:textStyle="bold"
+                                    android:textColor="#7F00FF"
+                                    android:background="@drawable/bg_stat_excused"
+                                    android:paddingStart="12dp"
+                                    android:paddingEnd="12dp"
+                                    android:paddingTop="4dp"
+                                    android:paddingBottom="4dp"
+                                    android:minWidth="32dp"
+                                    android:gravity="center" />
                             </LinearLayout>
+
                             <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E2E8F0" android:layout_marginVertical="8dp"/>
                             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
                                 <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Total Marked" android:textStyle="bold" android:textColor="#0F2D5E"/>
@@ -329,9 +398,9 @@
                 </androidx.cardview.widget.CardView>
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnLogout" android:layout_width="match_parent" android:layout_height="48dp"
+                    android:id="@+id/btnLogout" android:layout_width="match_parent" android:layout_height="52dp"
                     android:text="Sign Out" android:textColor="#DC2626" android:backgroundTint="#FEE2E2"
-                    android:stateListAnimator="@null" android:layout_marginTop="8dp" app:cornerRadius="12dp"/>
+                    android:stateListAnimator="@null" android:layout_marginTop="8dp" app:cornerRadius="16dp"/>
 
             </LinearLayout>
         </LinearLayout>
