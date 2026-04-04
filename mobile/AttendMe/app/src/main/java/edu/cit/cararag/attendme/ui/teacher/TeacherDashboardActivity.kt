@@ -1,6 +1,7 @@
 package edu.cit.cararag.attendme.ui.teacher
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.widget.LinearLayout
@@ -13,7 +14,6 @@ import com.google.android.material.button.MaterialButton
 import com.google.gson.Gson
 import edu.cit.cararag.attendme.R
 import edu.cit.cararag.attendme.data.model.SchoolClass
-import edu.cit.cararag.attendme.data.repository.ClassRepository
 import edu.cit.cararag.attendme.ui.login.LoginActivity
 import edu.cit.cararag.attendme.utils.SessionManager
 import kotlinx.coroutines.Dispatchers
@@ -23,17 +23,35 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
 
 class TeacherDashboardActivity : AppCompatActivity() {
 
-    private val classRepo  = ClassRepository()
     private val httpClient = OkHttpClient()
     private val gson       = Gson()
     private lateinit var token: String
     private lateinit var sessionManager: SessionManager
     private lateinit var classAdapter: TeacherClassAdapter
+
+    // Weather views
+    private lateinit var layoutWeatherLoading: LinearLayout
+    private lateinit var layoutWeatherContent: LinearLayout
+    private lateinit var layoutWeatherError: LinearLayout
+    private lateinit var tvWeatherEmoji: TextView
+    private lateinit var tvWeatherTemp: TextView
+    private lateinit var tvWeatherCondition: TextView
+    private lateinit var tvWeatherLocation: TextView
+    private lateinit var tvWeatherHumidity: TextView
+    private lateinit var tvWeatherWind: TextView
+    private lateinit var tvWeatherFeels: TextView
+    private lateinit var layoutWeatherTip: LinearLayout
+    private lateinit var tvTipIcon: TextView
+    private lateinit var tvTipTitle: TextView
+    private lateinit var tvTipLevel: TextView
+    private lateinit var tvTipText: TextView
+    private lateinit var tvWeatherUpdated: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,29 +60,38 @@ class TeacherDashboardActivity : AppCompatActivity() {
         sessionManager = SessionManager(this)
         token = sessionManager.getAccessToken() ?: ""
 
-        // Greeting + name
-        val name = sessionManager.getFullName() ?: "Teacher"
+        val name      = sessionManager.getFullName() ?: "Teacher"
         val firstName = name.split(" ").firstOrNull() ?: name
-        findViewById<TextView>(R.id.tvTeacherName).text = firstName
-        findViewById<TextView>(R.id.tvGreeting).text    = getGreeting()
-        findViewById<TextView>(R.id.tvCurrentDate).text = getCurrentDate()
+        findViewById<TextView>(R.id.tvGreeting).text     = getGreeting()
+        findViewById<TextView>(R.id.tvTeacherName).text  = firstName
+        findViewById<TextView>(R.id.tvCurrentDate).text  = getCurrentDate()
 
-        // Setup RecyclerView
-        classAdapter = TeacherClassAdapter(emptyList()) { cls ->
-            openTakeAttendance(cls)
-        }
+        // Weather views
+        layoutWeatherLoading  = findViewById(R.id.layoutWeatherLoading)
+        layoutWeatherContent  = findViewById(R.id.layoutWeatherContent)
+        layoutWeatherError    = findViewById(R.id.layoutWeatherError)
+        tvWeatherEmoji        = findViewById(R.id.tvWeatherEmoji)
+        tvWeatherTemp         = findViewById(R.id.tvWeatherTemp)
+        tvWeatherCondition    = findViewById(R.id.tvWeatherCondition)
+        tvWeatherLocation     = findViewById(R.id.tvWeatherLocation)
+        tvWeatherHumidity     = findViewById(R.id.tvWeatherHumidity)
+        tvWeatherWind         = findViewById(R.id.tvWeatherWind)
+        tvWeatherFeels        = findViewById(R.id.tvWeatherFeels)
+        layoutWeatherTip      = findViewById(R.id.layoutWeatherTip)
+        tvTipIcon             = findViewById(R.id.tvTipIcon)
+        tvTipTitle            = findViewById(R.id.tvTipTitle)
+        tvTipLevel            = findViewById(R.id.tvTipLevel)
+        tvTipText             = findViewById(R.id.tvTipText)
+        tvWeatherUpdated      = findViewById(R.id.tvWeatherUpdated)
+
+        // RecyclerView
+        classAdapter = TeacherClassAdapter(emptyList()) { cls -> openTakeAttendance(cls) }
         val rvClasses = findViewById<RecyclerView>(R.id.rvMyClasses)
         rvClasses.layoutManager = LinearLayoutManager(this)
         rvClasses.adapter = classAdapter
 
-        // Quick actions
+        // Quick action cards (now LinearLayout inside CardView)
         findViewById<MaterialButton>(R.id.btnTakeAttendance).setOnClickListener {
-            startActivity(Intent(this, TakeAttendanceActivity::class.java))
-        }
-        findViewById<MaterialButton>(R.id.btnTakeAttendanceClasses).setOnClickListener {
-            startActivity(Intent(this, TakeAttendanceActivity::class.java))
-        }
-        findViewById<MaterialButton>(R.id.btnTakeAttendanceNext).setOnClickListener {
             startActivity(Intent(this, TakeAttendanceActivity::class.java))
         }
         findViewById<MaterialButton>(R.id.btnViewHistory).setOnClickListener {
@@ -73,6 +100,12 @@ class TeacherDashboardActivity : AppCompatActivity() {
         findViewById<MaterialButton>(R.id.btnViewReports).setOnClickListener {
             startActivity(Intent(this, TeacherReportsActivity::class.java))
         }
+        findViewById<MaterialButton>(R.id.btnTakeAttendanceClasses).setOnClickListener {
+            startActivity(Intent(this, TakeAttendanceActivity::class.java))
+        }
+        findViewById<MaterialButton>(R.id.btnTakeAttendanceNext).setOnClickListener {
+            startActivity(Intent(this, TakeAttendanceActivity::class.java))
+        }
         findViewById<MaterialButton>(R.id.btnLogout).setOnClickListener {
             sessionManager.clearSession()
             startActivity(Intent(this, LoginActivity::class.java).apply {
@@ -80,15 +113,20 @@ class TeacherDashboardActivity : AppCompatActivity() {
             })
         }
 
+        // Weather refresh button
+        findViewById<MaterialButton>(R.id.btnWeatherRefresh).setOnClickListener { loadWeather() }
+        findViewById<MaterialButton>(R.id.btnWeatherRetry).setOnClickListener { loadWeather() }
+
         loadDashboard()
+        loadWeather()
     }
 
+    /* ── Dashboard Data ──────────────────────────────── */
     private fun loadDashboard() {
         val teacherId = sessionManager.getUserId() ?: return
         val today     = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
 
         lifecycleScope.launch {
-            // Fetch teacher's classes
             val classResult = withContext(Dispatchers.IO) {
                 try {
                     val req = Request.Builder()
@@ -103,7 +141,6 @@ class TeacherDashboardActivity : AppCompatActivity() {
                 } catch (e: Exception) { emptyList<SchoolClass>() }
             }
 
-            // Fetch today's attendance for each class in parallel
             val classItems = classResult.map { cls ->
                 async(Dispatchers.IO) {
                     try {
@@ -113,33 +150,14 @@ class TeacherDashboardActivity : AppCompatActivity() {
                         val body = httpClient.newCall(req).execute().body?.string() ?: ""
                         val json = gson.fromJson(body, com.google.gson.JsonObject::class.java)
                         val records = json.get("data")?.asJsonArray ?: com.google.gson.JsonArray()
-                        val present = records.count {
-                            it.asJsonObject.get("status")?.asString?.lowercase() == "present"
-                        }
-                        val total = cls.studentCount ?: 0
-                        val rate  = if (total > 0) (present * 100 / total) else 0
+                        val present = records.count { it.asJsonObject.get("status")?.asString?.lowercase() == "present" }
+                        val total   = cls.studentCount ?: 0
+                        val rate    = if (total > 0) (present * 100 / total) else 0
                         TeacherClassItem(cls, present, rate)
-                    } catch (e: Exception) {
-                        TeacherClassItem(cls)
-                    }
+                    } catch (e: Exception) { TeacherClassItem(cls) }
                 }
             }.awaitAll()
 
-            // Compute totals
-            val totalPresent = classItems.sumOf { it.presentCount }
-            val totalAbsent  = classItems.sumOf { cls ->
-                try {
-                    val req = Request.Builder()
-                        .url("http://10.0.2.2:8888/api/attendance/class/${cls.cls.classId}/date/$today")
-                        .header("Authorization", "Bearer $token").get().build()
-                    val body = httpClient.newCall(req).execute().body?.string() ?: ""
-                    val json = gson.fromJson(body, com.google.gson.JsonObject::class.java)
-                    val records = json.get("data")?.asJsonArray ?: com.google.gson.JsonArray()
-                    records.count { it.asJsonObject.get("status")?.asString?.lowercase() == "absent" }
-                } catch (e: Exception) { 0 }
-            }
-
-            // Simpler: fetch all attendance once per class and aggregate
             var sumPresent = 0; var sumAbsent = 0; var sumLate = 0; var sumExcused = 0
             val attendanceFetches = classResult.map { cls ->
                 async(Dispatchers.IO) {
@@ -168,15 +186,12 @@ class TeacherDashboardActivity : AppCompatActivity() {
             val totalStudents = classResult.sumOf { it.studentCount ?: 0 }
 
             withContext(Dispatchers.Main) {
-                // Stats
                 findViewById<TextView>(R.id.tvStatClasses).text  = classResult.size.toString()
                 findViewById<TextView>(R.id.tvStatStudents).text = totalStudents.toString()
                 findViewById<TextView>(R.id.tvStatPresent).text  = sumPresent.toString()
                 findViewById<TextView>(R.id.tvStatAbsent).text   = sumAbsent.toString()
                 findViewById<TextView>(R.id.tvStatLate).text     = sumLate.toString()
                 findViewById<TextView>(R.id.tvStatExcused).text  = sumExcused.toString()
-
-                // Summary
                 findViewById<TextView>(R.id.tvSummaryPresent).text = sumPresent.toString()
                 findViewById<TextView>(R.id.tvSummaryAbsent).text  = sumAbsent.toString()
                 findViewById<TextView>(R.id.tvSummaryLate).text    = sumLate.toString()
@@ -184,7 +199,6 @@ class TeacherDashboardActivity : AppCompatActivity() {
                 val totalMarked = sumPresent + sumAbsent + sumLate + sumExcused
                 findViewById<TextView>(R.id.tvSummaryTotal).text = totalMarked.toString()
 
-                // Classes list
                 if (classItems.isEmpty()) {
                     findViewById<LinearLayout>(R.id.layoutNoClasses).visibility = View.VISIBLE
                     findViewById<RecyclerView>(R.id.rvMyClasses).visibility     = View.GONE
@@ -193,53 +207,188 @@ class TeacherDashboardActivity : AppCompatActivity() {
                     findViewById<RecyclerView>(R.id.rvMyClasses).visibility     = View.VISIBLE
                     classAdapter.updateData(classItems)
                 }
-
-                // Next class banner
                 showNextClass(classItems)
             }
         }
     }
 
+    /* ── Weather Widget (Open-Meteo + OpenStreetMap) ─── */
+    private fun loadWeather() {
+        layoutWeatherLoading.visibility = View.VISIBLE
+        layoutWeatherContent.visibility = View.GONE
+        layoutWeatherError.visibility   = View.GONE
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                // Step 1: Use Cebu City coordinates as default (school location)
+                // In production you could use Android LocationManager for GPS
+                val lat = 10.3157
+                val lon = 123.8854
+
+                // Step 2: Reverse geocode — OpenStreetMap Nominatim (free, no key)
+                val geoReq  = Request.Builder()
+                    .url("https://nominatim.openstreetmap.org/reverse?lat=$lat&lon=$lon&format=json")
+                    .header("User-Agent", "AttendMe/1.0")
+                    .header("Accept-Language", "en")
+                    .get().build()
+                val geoBody = httpClient.newCall(geoReq).execute().body?.string() ?: ""
+                val geoJson = JSONObject(geoBody)
+                val address = geoJson.optJSONObject("address")
+                val city    = address?.optString("city")?.takeIf { it.isNotBlank() }
+                    ?: address?.optString("town")?.takeIf { it.isNotBlank() }
+                    ?: address?.optString("municipality")?.takeIf { it.isNotBlank() }
+                    ?: "Cebu City"
+
+                // Step 3: Fetch weather — Open-Meteo (free, no API key)
+                val weatherReq  = Request.Builder()
+                    .url(
+                        "https://api.open-meteo.com/v1/forecast" +
+                                "?latitude=$lat&longitude=$lon" +
+                                "&current=temperature_2m,relative_humidity_2m,apparent_temperature," +
+                                "weather_code,wind_speed_10m,is_day" +
+                                "&wind_speed_unit=kmh&temperature_unit=celsius&timezone=auto"
+                    ).get().build()
+                val weatherBody = httpClient.newCall(weatherReq).execute().body?.string() ?: ""
+                val weatherJson = JSONObject(weatherBody)
+                val current     = weatherJson.getJSONObject("current")
+
+                val temp      = current.getDouble("temperature_2m").toInt()
+                val feelsLike = current.getDouble("apparent_temperature").toInt()
+                val humidity  = current.getInt("relative_humidity_2m")
+                val wind      = current.getDouble("wind_speed_10m").toInt()
+                val code      = current.getInt("weather_code")
+                val isDay     = current.getInt("is_day")
+
+                val (emoji, condition) = getWeatherInfo(code, isDay)
+                val tip = getAttendanceTip(code, temp)
+                val tipIcon = tip[0]
+                val tipTitle = tip[1]
+                val tipLevel = tip[2]
+                val tipText = tip[3]
+                val tipColor = tip[4]
+                val tipBg = tip[5]
+                val updated = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
+
+                withContext(Dispatchers.Main) {
+                    layoutWeatherLoading.visibility = View.GONE
+                    layoutWeatherContent.visibility = View.VISIBLE
+
+                    tvWeatherEmoji.text    = emoji
+                    tvWeatherTemp.text     = "$temp°C"
+                    tvWeatherCondition.text = condition
+                    tvWeatherLocation.text = city
+                    tvWeatherHumidity.text = "$humidity%"
+                    tvWeatherWind.text     = "$wind km/h"
+                    tvWeatherFeels.text    = "$feelsLike°C"
+                    tvTipIcon.text         = tipIcon
+                    tvTipTitle.text        = tipTitle
+                    tvTipLevel.text        = tipLevel
+                    tvTipText.text         = tipText
+                    tvWeatherUpdated.text  = "Updated $updated"
+
+                    // Apply tip colors
+                    tvTipTitle.setTextColor(Color.parseColor(tipColor))
+                    tvTipLevel.setTextColor(Color.parseColor(tipColor))
+                    layoutWeatherTip.setBackgroundColor(Color.parseColor(tipBg))
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    layoutWeatherLoading.visibility = View.GONE
+                    layoutWeatherError.visibility   = View.VISIBLE
+                }
+            }
+        }
+    }
+
+    private fun getWeatherInfo(code: Int, isDay: Int): Pair<String, String> = when {
+        code == 0            -> Pair(if (isDay == 1) "☀️" else "🌙", "Clear Sky")
+        code in listOf(1, 2) -> Pair("⛅", "Partly Cloudy")
+        code == 3            -> Pair("☁️", "Overcast")
+        code in listOf(45, 48) -> Pair("🌫️", "Foggy")
+        code in listOf(51, 53, 55) -> Pair("🌦️", "Drizzle")
+        code in listOf(61, 63, 65) -> Pair("🌧️", "Rain")
+        code in listOf(80, 81, 82) -> Pair("🌧️", "Rain Showers")
+        code in listOf(95, 96, 99) -> Pair("⛈️", "Thunderstorm")
+        else -> Pair("🌡️", "Unknown")
+    }
+
+    // Returns: icon, title, level, tip text, text color hex, bg color hex
+    private fun getAttendanceTip(code: Int, temp: Int): Array<String> {
+        return when {
+            code in listOf(95, 96, 99) -> arrayOf(
+                "⛈️", "ATTENDANCE OUTLOOK", "High Impact",
+                "Thunderstorm warning — expect significant absences today. Consider marking weather-related absences as excused.",
+                "#DC2626", "#FFF5F5"
+            )
+            code in listOf(61, 63, 65, 80, 81, 82) -> arrayOf(
+                "🌧️", "ATTENDANCE OUTLOOK", "Moderate Impact",
+                "Rainy day — some students may be absent due to flooding or transportation issues.",
+                "#D97706", "#FFFBEB"
+            )
+            code in listOf(51, 53, 55) -> arrayOf(
+                "🌦️", "ATTENDANCE OUTLOOK", "Low Impact",
+                "Light drizzle expected — minor impact on attendance. Monitor late arrivals.",
+                "#0369A1", "#F0F9FF"
+            )
+            code in listOf(45, 48) -> arrayOf(
+                "🌫️", "ATTENDANCE OUTLOOK", "Low Impact",
+                "Foggy conditions — low visibility may cause transport delays. Expect some late arrivals.",
+                "#6B7280", "#F9FAFB"
+            )
+            temp >= 35 -> arrayOf(
+                "🌡️", "ATTENDANCE OUTLOOK", "High Impact",
+                "Extreme heat today — watch for heat-related absences. Ensure classrooms are well-ventilated.",
+                "#DC2626", "#FFF5F5"
+            )
+            temp >= 30 -> arrayOf(
+                "☀️", "ATTENDANCE OUTLOOK", "Moderate Impact",
+                "Hot weather — some students may feel unwell. Stay hydrated and monitor attendance closely.",
+                "#D97706", "#FFFBEB"
+            )
+            else -> arrayOf(
+                "✅", "ATTENDANCE OUTLOOK", "No Impact",
+                "Good weather today — expect normal to high attendance rates. Great day for your classes!",
+                "#059669", "#F0FDF4"
+            )
+        }
+    }
+
+    /* ── Next Class Banner ───────────────────────────── */
     private fun showNextClass(items: List<TeacherClassItem>) {
         val nowMins = Calendar.getInstance().let { it.get(Calendar.HOUR_OF_DAY) * 60 + it.get(Calendar.MINUTE) }
         val dayName = SimpleDateFormat("EEEE", Locale.getDefault()).format(Date()).lowercase()
 
         val scheduled = items.filter { item ->
-            val cls = item.cls
+            val cls      = item.cls
             val schedule = cls.schedule ?: return@filter false
-            val parts = schedule.split(" ")
-            if (parts.isNotEmpty()) {
-                val day = parts[0].lowercase()
-                dayName.startsWith(day.take(3))
-            } else true
+            val day      = schedule.split(" ").firstOrNull()?.lowercase() ?: return@filter false
+            dayName.startsWith(day.take(3))
         }.sortedBy { item ->
-            val schedule = item.cls.schedule ?: ""
-            val timePart = schedule.split(" ").getOrNull(1) ?: ""
+            val timePart = item.cls.schedule?.split(" ")?.getOrNull(1) ?: ""
             timeToMinutes(timePart) ?: 9999
         }
 
         val next = scheduled.firstOrNull { item ->
-            val schedule = item.cls.schedule ?: ""
-            val timePart = schedule.split(" ").getOrNull(1) ?: ""
-            val mins = timeToMinutes(timePart) ?: return@firstOrNull false
-            mins > nowMins
+            val timePart = item.cls.schedule?.split(" ")?.getOrNull(1) ?: ""
+            (timeToMinutes(timePart) ?: return@firstOrNull false) > nowMins
         } ?: scheduled.lastOrNull()
 
         if (next != null) {
-            val cls     = next.cls
-            val grade   = cls.className ?: ""
-            val section = cls.section?.let { " — $it" } ?: ""
-            val schedule = cls.schedule ?: ""
-            val timePart = schedule.split(" ").getOrNull(1) ?: ""
+            val cls      = next.cls
+            val grade    = cls.className ?: ""
+            val section  = cls.section?.let { " — $it" } ?: ""
+            val timePart = cls.schedule?.split(" ")?.getOrNull(1) ?: ""
             val timeStr  = formatTime(timePart)
 
-            findViewById<LinearLayout>(R.id.layoutNextClass).visibility = View.VISIBLE
-            val isNext = scheduled.firstOrNull {
-                val sp = it.cls.schedule?.split(" ")?.getOrNull(1) ?: ""
-                (timeToMinutes(sp) ?: 9999) > nowMins
-            } == next
+            val isUpcoming = scheduled.any { item ->
+                val tp = item.cls.schedule?.split(" ")?.getOrNull(1) ?: ""
+                (timeToMinutes(tp) ?: 9999) > nowMins
+            }
+
+            val layoutNext = findViewById<LinearLayout>(R.id.layoutNextClass)
+            layoutNext.visibility = View.VISIBLE
             findViewById<TextView>(R.id.tvNextClassLabel).text =
-                if (isNext) "YOUR NEXT CLASS" else "LAST CLASS TODAY"
+                if (isUpcoming) "YOUR NEXT CLASS" else "LAST CLASS TODAY"
             findViewById<TextView>(R.id.tvNextClassName).text = "$grade$section"
             val meta = buildString {
                 cls.subject?.let { append(it); append(" · ") }
@@ -269,22 +418,18 @@ class TeacherDashboardActivity : AppCompatActivity() {
         if (time.isBlank()) return ""
         return try {
             val parts = time.split(":")
-            val h = parts[0].toInt()
-            val m = parts.getOrNull(1)?.toInt() ?: 0
+            val h = parts[0].toInt(); val m = parts.getOrNull(1)?.toInt() ?: 0
             val ampm = if (h >= 12) "PM" else "AM"
             "${if (h % 12 == 0) 12 else h % 12}:${String.format("%02d", m)} $ampm"
         } catch (e: Exception) { time }
     }
 
-    private fun getGreeting(): String {
-        return when (Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
-            in 0..11  -> "GOOD MORNING"
-            in 12..17 -> "GOOD AFTERNOON"
-            else      -> "GOOD EVENING"
-        }
+    private fun getGreeting() = when (Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
+        in 0..11  -> "GOOD MORNING"
+        in 12..17 -> "GOOD AFTERNOON"
+        else      -> "GOOD EVENING"
     }
 
-    private fun getCurrentDate(): String {
-        return SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.getDefault()).format(Date())
-    }
+    private fun getCurrentDate() =
+        SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.getDefault()).format(Date())
 }

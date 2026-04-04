@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cardWeather"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="16dp"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="#FFFFFF">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Loading state -->
+        <LinearLayout
+            android:id="@+id/layoutWeatherLoading"
+            android:layout_width="match_parent"
+            android:layout_height="72dp"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:padding="16dp">
+            <ProgressBar
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:indeterminateTint="#0F2D5E"
+                android:layout_marginEnd="12dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Fetching weather data..."
+                android:textSize="13sp"
+                android:textColor="#64748B"/>
+        </LinearLayout>
+
+        <!-- Weather content (hidden until loaded) -->
+        <LinearLayout
+            android:id="@+id/layoutWeatherContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <!-- Top: dark navy weather strip -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="#0F2D5E"
+                android:padding="16dp"
+                android:gravity="center_vertical">
+
+                <!-- Emoji + temp -->
+                <TextView
+                    android:id="@+id/tvWeatherEmoji"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⛅"
+                    android:textSize="38sp"
+                    android:layout_marginEnd="14dp"/>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+                        <TextView
+                            android:id="@+id/tvWeatherTemp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="28°C"
+                            android:textSize="30sp"
+                            android:textStyle="bold"
+                            android:textColor="#FFFFFF"
+                            android:letterSpacing="-0.03"/>
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvWeatherCondition"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Partly Cloudy"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:textColor="#D9FFFFFF" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginTop="2dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="📍 "
+                            android:textSize="11sp"/>
+                        <TextView
+                            android:id="@+id/tvWeatherLocation"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Cebu City"
+                            android:textSize="11sp"
+                            android:textColor="#AAC4E0"/>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Detail chips -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="end">
+
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:orientation="horizontal" android:gravity="center_vertical"
+                        android:layout_marginBottom="6dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="💧 " android:textSize="11sp"/>
+                        <TextView android:id="@+id/tvWeatherHumidity"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="72%" android:textSize="11sp" android:textStyle="bold"
+                            android:textColor="#FFFFFF"/>
+                    </LinearLayout>
+
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:orientation="horizontal" android:gravity="center_vertical"
+                        android:layout_marginBottom="6dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="💨 " android:textSize="11sp"/>
+                        <TextView android:id="@+id/tvWeatherWind"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="12 km/h" android:textSize="11sp" android:textStyle="bold"
+                            android:textColor="#FFFFFF"/>
+                    </LinearLayout>
+
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:orientation="horizontal" android:gravity="center_vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="🌡️ " android:textSize="11sp"/>
+                        <TextView android:id="@+id/tvWeatherFeels"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="30°C" android:textSize="11sp" android:textStyle="bold"
+                            android:textColor="#FFFFFF"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Bottom: attendance tip -->
+            <LinearLayout
+                android:id="@+id/layoutWeatherTip"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical"
+                    android:layout_marginBottom="6dp">
+
+                    <TextView
+                        android:id="@+id/tvTipIcon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="✅"
+                        android:textSize="18sp"
+                        android:layout_marginEnd="8dp"/>
+
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:orientation="vertical">
+                        <TextView
+                            android:id="@+id/tvTipTitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="ATTENDANCE OUTLOOK"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:textColor="#059669"
+                            android:letterSpacing="0.06"/>
+                        <TextView
+                            android:id="@+id/tvTipLevel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="No Impact"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:textColor="#059669"/>
+                    </LinearLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnWeatherRefresh"
+                        android:layout_width="wrap_content"
+                        android:layout_height="30dp"
+                        android:text="↻"
+                        android:textSize="14sp"
+                        android:textColor="#0F2D5E"
+                        android:backgroundTint="#EBF2FF"
+                        android:stateListAnimator="@null"
+                        android:padding="0dp"
+                        app:cornerRadius="8dp"/>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvTipText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Good weather today — expect normal to high attendance rates. Great day for your classes!"
+                    android:textSize="12sp"
+                    android:textColor="#334155"
+                    android:lineSpacingMultiplier="1.4"/>
+
+                <TextView
+                    android:id="@+id/tvWeatherUpdated"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Updated just now"
+                    android:textSize="10sp"
+                    android:textColor="#94A3B8"
+                    android:layout_marginTop="6dp"/>
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Error state -->
+        <LinearLayout
+            android:id="@+id/layoutWeatherError"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp"
+            android:visibility="gone">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="⚠️ Unable to load weather"
+                android:textSize="13sp" android:textColor="#D97706"/>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnWeatherRetry"
+                android:layout_width="wrap_content" android:layout_height="32dp"
+                android:text="Retry" android:textSize="12sp"
+                android:textColor="#0F2D5E" android:backgroundTint="#EBF2FF"
+                android:stateListAnimator="@null" app:cornerRadius="8dp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
