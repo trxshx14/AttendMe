@@ -5,6 +5,7 @@ import {
   BarChart2, ClipboardList, ArrowRight, Activity,
   CalendarDays, TrendingUp, GraduationCap, Bell
 } from 'lucide-react';
+import WeatherWidget from './WeatherWidget'; 
 import './TeacherDashboard.css';
 
 /* ── helpers ─────────────────────────────────────────── */
@@ -68,7 +69,6 @@ const TeacherDashboard = () => {
       const user      = JSON.parse(localStorage.getItem('user') || '{}');
       const teacherId = user.userId || user.id;
 
-      /* 1 — classes assigned to this teacher */
       const classesRes  = await fetch(
         `http://localhost:8888/api/classes/teacher/${teacherId}`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -76,7 +76,6 @@ const TeacherDashboard = () => {
       const classesData = await classesRes.json();
       const classes     = classesData.data || [];
 
-      /* 2 — today's attendance per class */
       const today = new Date().toISOString().split('T')[0];
       let totalStudents = 0, totalPresent = 0, totalAbsent = 0,
           totalLate = 0, totalExcused = 0;
@@ -89,30 +88,23 @@ const TeacherDashboard = () => {
           );
           const data = await res.json();
           const att  = data.data || [];
-
-          // Normalize: API may return uppercase statuses
           const norm    = s => (s || '').toLowerCase();
           const present = att.filter(a => norm(a.status) === 'present').length;
           const absent  = att.filter(a => norm(a.status) === 'absent').length;
           const late    = att.filter(a => norm(a.status) === 'late').length;
           const excused = att.filter(a => norm(a.status) === 'excused').length;
-
           totalStudents += cls.studentCount || 0;
           totalPresent  += present;
           totalAbsent   += absent;
           totalLate     += late;
           totalExcused  += excused;
-
           const { grade, section } = parseClassObj(cls);
           return {
             ...cls, grade, section,
-            presentCount:   present,
-            absentCount:    absent,
-            lateCount:      late,
-            excusedCount:   excused,
+            presentCount: present, absentCount: absent,
+            lateCount: late, excusedCount: excused,
             attendanceRate: cls.studentCount
-              ? Math.round(((present + late) / cls.studentCount) * 100)
-              : 0,
+              ? Math.round(((present + late) / cls.studentCount) * 100) : 0,
           };
         } catch {
           const { grade, section } = parseClassObj(cls);
@@ -121,10 +113,8 @@ const TeacherDashboard = () => {
         }
       }));
 
-      /* 3 — next class logic */
       const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
       const dayName = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-
       const scheduled = classDetails
         .filter(cls => {
           if (!cls.scheduleTime) return false;
@@ -135,25 +125,18 @@ const TeacherDashboard = () => {
           return true;
         })
         .sort((a, b) => timeToMinutes(a.scheduleTime) - timeToMinutes(b.scheduleTime));
-
       const upcoming = scheduled.filter(c => timeToMinutes(c.scheduleTime) > nowMins);
       const next     = upcoming[0] || scheduled[scheduled.length - 1] || null;
-
       if (next) {
         setNextClass({
-          grade:    next.grade,
-          section:  next.section,
-          subject:  next.subject,
-          time:     formatTime(next.scheduleTime),
-          timeEnd:  next.scheduleTimeEnd ? formatTime(next.scheduleTimeEnd) : null,
-          students: next.studentCount || 0,
-          isPast:   !upcoming[0],
+          grade: next.grade, section: next.section, subject: next.subject,
+          time: formatTime(next.scheduleTime),
+          timeEnd: next.scheduleTimeEnd ? formatTime(next.scheduleTimeEnd) : null,
+          students: next.studentCount || 0, isPast: !upcoming[0],
         });
       }
-
       setStats({ totalClasses: classes.length, totalStudents, todayPresent: totalPresent, todayAbsent: totalAbsent, todayLate: totalLate, todayExcused: totalExcused });
       setMyClasses(classDetails);
-
     } catch (err) {
       console.error('Dashboard fetch error:', err);
     } finally {
@@ -217,18 +200,14 @@ const TeacherDashboard = () => {
       {/* ── Next Class Reminder ──────────────────────── */}
       {nextClass && (
         <div className={`td-next-banner${nextClass.isPast ? ' td-next-past' : ''}`}>
-          <div className="td-next-bell">
-            <Bell size={20} />
-          </div>
+          <div className="td-next-bell"><Bell size={20} /></div>
           <div className="td-next-body">
             <span className="td-next-eyebrow">
               {nextClass.isPast ? 'Last class today' : 'Your next class'}
             </span>
             <span className="td-next-title">
               {nextClass.grade}{nextClass.section ? ` ${nextClass.section}` : ''}
-              {nextClass.subject
-                ? <span className="td-next-subject"> · {nextClass.subject}</span>
-                : null}
+              {nextClass.subject ? <span className="td-next-subject"> · {nextClass.subject}</span> : null}
             </span>
             <span className="td-next-meta">
               <Clock size={13} />
@@ -236,10 +215,7 @@ const TeacherDashboard = () => {
               &nbsp;·&nbsp;{nextClass.students} students
             </span>
           </div>
-          <button
-            className="td-next-cta"
-            onClick={() => navigate('/teacher/take-attendance')}
-          >
+          <button className="td-next-cta" onClick={() => navigate('/teacher/take-attendance')}>
             Take Attendance <ArrowRight size={14} />
           </button>
         </div>
@@ -248,17 +224,13 @@ const TeacherDashboard = () => {
       {/* ── Quick Actions ────────────────────────────── */}
       <div className="td-actions-row">
         <button className="td-action-btn td-action-primary" onClick={() => navigate('/teacher/take-attendance')}>
-          <ClipboardList size={18} />
-          Take Attendance
-          <ArrowRight size={15} className="td-arrow" />
+          <ClipboardList size={18} /> Take Attendance <ArrowRight size={15} className="td-arrow" />
         </button>
         <button className="td-action-btn td-action-ghost" onClick={() => navigate('/teacher/history')}>
-          <Activity size={18} />
-          View History
+          <Activity size={18} /> View History
         </button>
         <button className="td-action-btn td-action-ghost" onClick={() => navigate('/teacher/reports')}>
-          <BarChart2 size={18} />
-          Reports
+          <BarChart2 size={18} /> Reports
         </button>
       </div>
 
@@ -279,7 +251,7 @@ const TeacherDashboard = () => {
       {/* ── Main Grid ────────────────────────────────── */}
       <div className="td-main-grid">
 
-        {/* My Classes */}
+        {/* Left Column: My Classes */}
         <div className="td-card td-classes-card">
           <div className="td-card-header">
             <div className="td-card-title"><BookOpen size={17} /> My Classes</div>
@@ -329,8 +301,13 @@ const TeacherDashboard = () => {
           </div>
         </div>
 
-        {/* Right column */}
+        {/* Right Column: Weather + Schedule + Summary */}
         <div className="td-right-col">
+          
+          {/* ✅ SIDEBAR WEATHER: Now at the top of the right column */}
+          <div className="td-weather-sidebar-wrapper" style={{ marginBottom: '0 rem' }}>
+             <WeatherWidget />
+          </div>
 
           {/* Today's Schedule */}
           <div className="td-card">
