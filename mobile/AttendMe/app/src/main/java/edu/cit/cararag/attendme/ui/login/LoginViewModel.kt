@@ -20,9 +20,7 @@ class LoginViewModel : ViewModel() {
             _loginState.value = LoginState.Error("Email and password are required")
             return
         }
-
         _loginState.value = LoginState.Loading
-
         viewModelScope.launch {
             val result = repository.login(email.trim(), password)
             result.fold(
@@ -38,6 +36,29 @@ class LoginViewModel : ViewModel() {
                 onFailure = { exception ->
                     _loginState.value = LoginState.Error(
                         exception.message ?: "An error occurred"
+                    )
+                }
+            )
+        }
+    }
+
+    fun googleLogin(accessToken: String) {
+        _loginState.value = LoginState.Loading
+        viewModelScope.launch {
+            val result = repository.googleLogin(accessToken)
+            result.fold(
+                onSuccess = { response ->
+                    if (response.success && response.data != null) {
+                        _loginState.value = LoginState.Success(response.data)
+                    } else {
+                        _loginState.value = LoginState.Error(
+                            response.error?.message ?: "Google login failed"
+                        )
+                    }
+                },
+                onFailure = { exception ->
+                    _loginState.value = LoginState.Error(
+                        exception.message ?: "Google login failed"
                     )
                 }
             )

@@ -10,6 +10,9 @@ interface ApiService {
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
 
+    @POST("auth/google")
+    suspend fun googleLogin(@Body request: GoogleLoginRequest): Response<LoginResponse>
+
     // ── Users ─────────────────────────────────────────────
     @GET("users")
     suspend fun getAllUsers(): Response<ApiResponse<List<User>>>
