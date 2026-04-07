@@ -30,11 +30,15 @@ export const authService = {
     }
   },
 
+  // ✅ Updated logout — calls backend to mark user offline before clearing session
   async logout() {
     try {
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (refreshToken) {
-        await api.post('/auth/logout', { refreshToken });
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        await api.post('/auth/logout', {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        console.log('✅ User marked offline on server');
       }
     } catch (error) {
       console.error('Logout error:', error);
@@ -52,7 +56,7 @@ export const authService = {
     try {
       console.log('🔵 Sending Google access_token to backend...');
       const response = await api.post('/auth/google', {
-        accessToken: googleAccessToken,  // matches GoogleAuthRequest field
+        accessToken: googleAccessToken,
       });
 
       if (response.data.success) {

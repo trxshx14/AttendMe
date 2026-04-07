@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import {
   Users, ShieldCheck, UserCircle2, CheckCircle2,
   Search, Pencil, Trash2, X, Plus,
-  ToggleLeft, ToggleRight, Eye, EyeOff, Camera, Upload
+  Eye, EyeOff, Camera, Upload
 } from 'lucide-react';
 import './ManageUsers.css';
 
@@ -29,27 +29,31 @@ const ManageUsers = () => {
   const [filterRole, setFilterRole]     = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
 
-  useEffect(() => { fetchUsers(); }, []);
+  useEffect(() => {
+    fetchUsers();
+    // ✅ Auto-refresh every 30 seconds to keep online status current
+    const interval = setInterval(fetchUsers, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   /* ── Fetch users ─────────────────────────────────────── */
   const fetchUsers = async () => {
-    setLoading(true);
+    setLoading(prev => users.length === 0 ? true : prev); // only show loading on first load
     setError('');
     try {
       const response = await userService.getAllUsers();
       if (response?.success) {
         const raw = response.data || [];
-        const normalized = raw.map(u => {
-          let isActive = false;
-          if      (typeof u.active   === 'boolean') isActive = u.active;
-          else if (typeof u.isActive === 'boolean') isActive = u.isActive;
-          else if (typeof u.enabled  === 'boolean') isActive = u.enabled;
-          else if (typeof u.status   === 'string')  isActive = u.status.toUpperCase() === 'ACTIVE';
-          return { ...u, active: isActive };
-        });
+        const normalized = raw.map(u => ({
+          ...u,
+          // ✅ isOnline is the source of truth for active session status
+          isOnline: u.isOnline ?? false,
+          active: typeof u.isActive === 'boolean' ? u.isActive
+                : typeof u.active   === 'boolean' ? u.active
+                : true,
+        }));
         setUsers(normalized);
 
-        // ✅ Sync sidebar immediately if logged-in user's pic changed
         if (currentUser?.id) {
           const me = normalized.find(u => u.userId === currentUser.id);
           if (me && me.profilePicUrl && me.profilePicUrl !== currentUser.profilePicUrl) {
@@ -69,9 +73,10 @@ const ManageUsers = () => {
       user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchRole   = filterRole === 'all' || user.role === filterRole;
+    // ✅ Filter by online status instead of isActive
     const matchStatus = filterStatus === 'all' ||
-      (filterStatus === 'active'   &&  user.active) ||
-      (filterStatus === 'inactive' && !user.active);
+      (filterStatus === 'active'   &&  user.isOnline) ||
+      (filterStatus === 'inactive' && !user.isOnline);
     return matchSearch && matchRole && matchStatus;
   });
 
@@ -80,7 +85,8 @@ const ManageUsers = () => {
 
   const totalAdmins   = users.filter(u => u.role === 'ADMIN').length;
   const totalTeachers = users.filter(u => u.role === 'TEACHER').length;
-  const totalActive   = users.filter(u => u.active).length;
+  // ✅ Active count = currently online
+  const totalActive   = users.filter(u => u.isOnline).length;
 
   /* ── Profile picture handlers ────────────────────────── */
   const handlePicChange = (e) => {
@@ -143,50 +149,34 @@ const ManageUsers = () => {
           role:     formData.role,
           ...(formData.password && { password: formData.password }),
         });
-        if (!response?.success) {
-          setError(response?.message || 'Failed to save user');
-          setSaving(false);
-          return;
-        }
+        if (!response?.success) { setError(response?.message || 'Failed to save user'); setSaving(false); return; }
         savedUserId = response.data?.userId || editingUser.userId;
       } else {
         const response = await userService.createUser(formData);
-        if (!response?.success) {
-          setError(response?.message || 'Failed to save user');
-          setSaving(false);
-          return;
-        }
+        if (!response?.success) { setError(response?.message || 'Failed to save user'); setSaving(false); return; }
         savedUserId = response.data?.userId;
       }
 
-      // Upload profile picture BEFORE closing modal / refreshing
       if (profilePicFile && savedUserId) {
         setUploadingPic(true);
         try {
           const picFormData = new FormData();
           picFormData.append('file', profilePicFile);
           const picResponse = await userService.uploadProfilePicture(savedUserId, picFormData);
-
-          // Immediately sync sidebar if this is the logged-in user
           if (picResponse?.success && currentUser?.id === savedUserId) {
             updateUser({ profilePicUrl: picResponse.data?.profilePicUrl });
           }
         } catch (picErr) {
           console.warn('Profile picture upload failed:', picErr);
           setError('User saved but profile picture upload failed.');
-        } finally {
-          setUploadingPic(false);
-        }
+        } finally { setUploadingPic(false); }
       }
 
       handleCloseModal();
-      await fetchUsers(); // fetchUsers also syncs sidebar via updateUser
-
+      await fetchUsers();
     } catch (err) {
       setError(err.message || 'An error occurred');
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
   };
 
   /* ── Delete ──────────────────────────────────────────── */
@@ -200,61 +190,16 @@ const ManageUsers = () => {
     } catch { setError('Error deleting user'); }
   };
 
-  /* ── Toggle active / inactive ────────────────────────── */
-  const handleToggleActive = async (userId, currentActive) => {
-    setError('');
-    setUsers(prev => prev.map(u => u.userId === userId ? { ...u, active: !currentActive } : u));
-    try {
-      const response = currentActive
-        ? await userService.deactivateUser(userId)
-        : await userService.activateUser(userId);
-
-      if (response?.success) {
-        const d = response.data || {};
-        let serverActive;
-        if      (typeof d.active   === 'boolean') serverActive = d.active;
-        else if (typeof d.isActive === 'boolean') serverActive = d.isActive;
-        else if (typeof d.enabled  === 'boolean') serverActive = d.enabled;
-        else if (typeof d.status   === 'string')  serverActive = d.status.toUpperCase() === 'ACTIVE';
-        else serverActive = !currentActive;
-        setUsers(prev => prev.map(u => u.userId === userId ? { ...u, active: serverActive } : u));
-      } else {
-        setUsers(prev => prev.map(u => u.userId === userId ? { ...u, active: currentActive } : u));
-        setError(response?.message || 'Failed to update user status');
-      }
-    } catch {
-      setUsers(prev => prev.map(u => u.userId === userId ? { ...u, active: currentActive } : u));
-      setError('Error updating user status');
-    }
-  };
-
-  /* ── Reset password ──────────────────────────────────── */
-  const handleResetPassword = async (userId) => {
-    if (!window.confirm('Reset password for this user?')) return;
-    setError('');
-    try {
-      const response = await userService.resetPassword(userId);
-      if (response?.success) {
-        alert(`Password reset!\n\nTemporary Password: ${response.data?.tempPassword || response.tempPassword || '(check server logs)'}`);
-      } else setError('Error resetting password');
-    } catch { setError('Error resetting password'); }
-  };
-
   const getInitials = (name) =>
     name ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '??';
 
-  /* ── Avatar with error fallback ──────────────────────── */
   const UserAvatar = ({ user }) => {
     const [imgError, setImgError] = useState(false);
     const picUrl = user?.profilePicUrl || user?.avatarUrl;
     if (picUrl && !imgError) {
       return (
-        <img
-          src={`${picUrl}?t=${Date.now()}`}
-          alt={user.fullName}
-          className="mu-avatar mu-avatar-img"
-          onError={() => setImgError(true)}
-        />
+        <img src={`${picUrl}?t=${Date.now()}`} alt={user.fullName}
+          className="mu-avatar mu-avatar-img" onError={() => setImgError(true)} />
       );
     }
     return <div className="mu-avatar">{getInitials(user.fullName)}</div>;
@@ -299,7 +244,8 @@ const ManageUsers = () => {
         </div>
         <div className="mu-stat-card">
           <div className="mu-stat-icon green"><CheckCircle2 size={22} color="#0F2D5E" strokeWidth={2} /></div>
-          <div><div className="mu-stat-value">{totalActive}</div><div className="mu-stat-label">Active</div></div>
+          {/* ✅ Now shows online count */}
+          <div><div className="mu-stat-value">{totalActive}</div><div className="mu-stat-label">Online Now</div></div>
         </div>
       </div>
 
@@ -318,10 +264,11 @@ const ManageUsers = () => {
           <option value="TEACHER">Teacher</option>
         </select>
         <div className="mu-toolbar-divider" />
+        {/* ✅ Filter now filters by online status */}
         <select className="mu-filter-select" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
           <option value="all">All Status</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
+          <option value="active">Online</option>
+          <option value="inactive">Offline</option>
         </select>
         {hasFilters && <button className="mu-clear-filters" onClick={clearFilters}>Clear</button>}
       </div>
@@ -335,7 +282,10 @@ const ManageUsers = () => {
         <table className="mu-table">
           <thead>
             <tr>
-              <th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Last Login</th><th>Actions</th>
+              <th>User</th><th>Email</th><th>Role</th>
+              {/* ✅ Changed Status header */}
+              <th>Status</th>
+              <th>Last Login</th><th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -345,6 +295,14 @@ const ManageUsers = () => {
                   <div className="mu-user-cell">
                     <div className="mu-avatar-wrap">
                       <UserAvatar user={user} />
+                      {/* ✅ Online indicator dot on avatar */}
+                      {user.isOnline && (
+                        <span style={{
+                          position: 'absolute', bottom: 0, right: 0,
+                          width: '10px', height: '10px', borderRadius: '50%',
+                          background: '#16a34a', border: '2px solid #fff'
+                        }} />
+                      )}
                     </div>
                     <span className="mu-user-name">{user.fullName}</span>
                   </div>
@@ -358,14 +316,17 @@ const ManageUsers = () => {
                   </span>
                 </td>
                 <td>
-                  <span className={`mu-status-badge ${user.active ? 'mu-active' : 'mu-inactive'}`}>
+                  {/* ✅ Status now shows Online/Offline based on isOnline — no toggle button */}
+                  <span className={`mu-status-badge ${user.isOnline ? 'mu-active' : 'mu-inactive'}`}>
                     <span className="mu-status-dot" />
-                    {user.active ? 'Active' : 'Inactive'}
+                    {user.isOnline ? 'Online' : 'Offline'}
                   </span>
                 </td>
                 <td className="mu-last-login">
                   {user.lastLogin
-                    ? new Date(user.lastLogin).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })
+                    ? new Date(user.lastLogin).toLocaleDateString('en-PH', {
+                        month: 'short', day: 'numeric', year: 'numeric'
+                      })
                     : '—'}
                 </td>
                 <td>
@@ -373,13 +334,8 @@ const ManageUsers = () => {
                     <button className="mu-btn-icon" onClick={() => handleOpenModal(user)} title="Edit">
                       <Pencil size={15} color="#0F2D5E" />
                     </button>
-                    <button className="mu-btn-icon" onClick={() => handleToggleActive(user.userId, user.active)}
-                      title={user.active ? 'Deactivate' : 'Activate'}>
-                      {user.active
-                        ? <ToggleRight size={20} color="#16a34a" />
-                        : <ToggleLeft  size={20} color="#dc2626" />}
-                    </button>
-                    <button className="mu-btn-icon mu-delete" onClick={() => handleDeleteUser(user.userId, user.fullName)} title="Delete">
+                    <button className="mu-btn-icon mu-delete"
+                      onClick={() => handleDeleteUser(user.userId, user.fullName)} title="Delete">
                       <Trash2 size={15} color="#ef4444" />
                     </button>
                   </div>
@@ -399,7 +355,7 @@ const ManageUsers = () => {
         </table>
       </div>
 
-      {/* Add/Edit Modal */}
+      {/* Add/Edit Modal — unchanged */}
       {showModal && (
         <div className="mu-modal-overlay" onClick={handleCloseModal}>
           <div className="mu-modal" onClick={e => e.stopPropagation()}>
@@ -409,8 +365,6 @@ const ManageUsers = () => {
             </div>
             <form onSubmit={handleSubmit}>
               <div className="mu-modal-body">
-
-                {/* Profile Picture Upload */}
                 <div className="mu-form-group mu-pic-group">
                   <label className="mu-form-label">Profile Photo</label>
                   <div className="mu-pic-upload-area">
@@ -441,7 +395,6 @@ const ManageUsers = () => {
                     </div>
                   </div>
                 </div>
-
                 <div className="mu-form-group">
                   <label className="mu-form-label">Full Name *</label>
                   <input type="text" name="fullName" className="mu-form-input" value={formData.fullName}
