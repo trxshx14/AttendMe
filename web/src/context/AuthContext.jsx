@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { authService } from '../services/authService';
 
 const AuthContext = createContext();
 
@@ -11,7 +12,7 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser]       = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,12 +28,18 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(userData));
   };
 
-  const logout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
+  // ✅ Now calls backend to mark user offline before clearing session
+  const logout = async () => {
+    try {
+      await authService.logout(); // marks isOnline = false on server
+    } catch (e) {
+      console.error('Logout API error:', e);
+    } finally {
+      localStorage.removeItem('user');
+      setUser(null);
+    }
   };
 
-  // Call this after profile pic upload to sync context + localStorage
   const updateUser = (updatedFields) => {
     setUser(prev => {
       const updated = { ...prev, ...updatedFields };

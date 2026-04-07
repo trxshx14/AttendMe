@@ -24,10 +24,10 @@ const Sidebar = ({ currentPage, onPageChange }) => {
 
   const nav = user?.role === 'admin' ? adminNav : teacherNav;
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  const handleLogout = async () => {
+  await logout();
+  navigate('/login');
+};
 
   const handleNavigation = (item) => {
     onPageChange?.(item.id);
