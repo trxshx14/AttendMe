@@ -11,6 +11,18 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * REPOSITORY PATTERN
+ *
+ * Abstracts all Attendance data access
+ * behind this interface. AttendanceService
+ * depends ONLY on this contract, never
+ * on EntityManager or raw SQL.
+ *
+ * Enables: swapping Supabase PostgreSQL
+ * for any JPA-compatible DB with zero
+ * service code changes.
+ */
 @Repository
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
