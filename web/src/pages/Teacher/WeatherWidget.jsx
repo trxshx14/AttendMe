@@ -1,60 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Wind, Droplets, RefreshCw, AlertTriangle } from 'lucide-react';
 import './WeatherWidget.css';
+import { getWeatherInfo, getAttendanceTip }
+  from '../services/weatherAdapter';
 
-/* ── Weather code → label + emoji ─────────────────────── */
-const getWeatherInfo = (code, isDay = 1) => {
-  if (code === 0)                  return { label: 'Clear Sky',      emoji: isDay ? '☀️' : '🌙' };
-  if ([1, 2].includes(code))       return { label: 'Partly Cloudy',  emoji: '⛅' };
-  if (code === 3)                  return { label: 'Overcast',       emoji: '☁️' };
-  if ([45, 48].includes(code))     return { label: 'Foggy',          emoji: '🌫️' };
-  if ([51, 53, 55].includes(code)) return { label: 'Drizzle',        emoji: '🌦️' };
-  if ([61, 63, 65].includes(code)) return { label: 'Rain',           emoji: '🌧️' };
-  if ([71, 73, 75].includes(code)) return { label: 'Snow',           emoji: '❄️' };
-  if ([80, 81, 82].includes(code)) return { label: 'Rain Showers',   emoji: '🌧️' };
-  if ([95, 96, 99].includes(code)) return { label: 'Thunderstorm',   emoji: '⛈️' };
-  return { label: 'Unknown', emoji: '🌡️' };
-};
-
-/* ── Attendance tip based on weather code + temperature ── */
-const getAttendanceTip = (code, temp) => {
-  if ([95, 96, 99].includes(code))
-    return {
-      tip:   'Thunderstorm warning — expect significant absences today. Consider marking weather-related absences as excused.',
-      color: '#DC2626', bg: '#FEF2F2', icon: '⛈️', level: 'High Impact',
-    };
-  if ([61, 63, 65, 80, 81, 82].includes(code))
-    return {
-      tip:   'Rainy day — some students may be absent due to flooding or transportation issues.',
-      color: '#D97706', bg: '#FFFBEB', icon: '🌧️', level: 'Moderate Impact',
-    };
-  if ([51, 53, 55].includes(code))
-    return {
-      tip:   'Light drizzle expected — minor impact on attendance. Monitor late arrivals.',
-      color: '#0369A1', bg: '#F0F9FF', icon: '🌦️', level: 'Low Impact',
-    };
-  if ([45, 48].includes(code))
-    return {
-      tip:   'Foggy conditions — low visibility may cause transport delays. Expect some late arrivals.',
-      color: '#6B7280', bg: '#F9FAFB', icon: '🌫️', level: 'Low Impact',
-    };
-  if (temp >= 35)
-    return {
-      tip:   'Extreme heat today — watch for heat-related absences. Ensure classrooms are well-ventilated.',
-      color: '#DC2626', bg: '#FEF2F2', icon: '🌡️', level: 'High Impact',
-    };
-  if (temp >= 30)
-    return {
-      tip:   'Hot weather — some students may feel unwell. Stay hydrated and monitor attendance closely.',
-      color: '#D97706', bg: '#FFFBEB', icon: '☀️', level: 'Moderate Impact',
-    };
-  return {
-    tip:   'Good weather today — expect normal to high attendance rates. Great day for your classes!',
-    color: '#059669', bg: '#F0FDF4', icon: '✅', level: 'No Impact',
-  };
-};
-
-/* ─────────────────────────────────────────────────────── */
 
 const WeatherWidget = () => {
   const [weather, setWeather]         = useState(null);
