@@ -291,44 +291,20 @@ class TeacherReportsActivity : AppCompatActivity() {
         }
     }
 
-    private fun getDateRange(): Pair<String, String> {
-        val today = Calendar.getInstance()
-        return when (spinnerPeriod.selectedItemPosition) {
-            0 -> { // This week (Mon–Sun)
-                val mon = today.clone() as Calendar
-                mon.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-                val sun = mon.clone() as Calendar
-                sun.add(Calendar.DAY_OF_WEEK, 6)
-                Pair(sdf.format(mon.time), sdf.format(sun.time))
+    private fun getDateRange():
+            Pair<String,String> {
+        val strategy: DateRangeStrategy =
+            when(spinnerPeriod.selectedItemPosition){
+                0 -> ThisWeekStrategy(sdf)
+                1 -> LastWeekStrategy(sdf)
+                2 -> ThisMonthStrategy(sdf)
+                3 -> ThisMonthStrategy(sdf)
+                4 -> CustomRangeStrategy(
+                    etCustomFrom.text.toString(),
+                    etCustomTo.text.toString())
+                else -> CustomRangeStrategy("","")
             }
-            1 -> { // Last week
-                val mon = today.clone() as Calendar
-                mon.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-                mon.add(Calendar.DAY_OF_WEEK, -7)
-                val sun = mon.clone() as Calendar
-                sun.add(Calendar.DAY_OF_WEEK, 6)
-                Pair(sdf.format(mon.time), sdf.format(sun.time))
-            }
-            2 -> { // Last 2 weeks
-                val mon = today.clone() as Calendar
-                mon.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-                mon.add(Calendar.DAY_OF_WEEK, -14)
-                val sun = today.clone() as Calendar
-                sun.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
-                Pair(sdf.format(mon.time), sdf.format(sun.time))
-            }
-            3 -> { // This month
-                val first = today.clone() as Calendar
-                first.set(Calendar.DAY_OF_MONTH, 1)
-                val last = today.clone() as Calendar
-                last.set(Calendar.DAY_OF_MONTH, last.getActualMaximum(Calendar.DAY_OF_MONTH))
-                Pair(sdf.format(first.time), sdf.format(last.time))
-            }
-            4 -> { // Custom
-                Pair(etCustomFrom.text.toString(), etCustomTo.text.toString())
-            }
-            else -> Pair("", "")
-        }
+        return strategy.getRange()
     }
 
     private fun updateDatePreview() {
