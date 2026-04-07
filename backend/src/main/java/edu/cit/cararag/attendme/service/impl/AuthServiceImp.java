@@ -41,8 +41,7 @@ public class AuthServiceImp implements AuthService {
         System.out.println("========== AUTH SERVICE LOGIN ==========");
 
         String identifier = (request.getEmail() != null && !request.getEmail().isBlank())
-                ? request.getEmail()
-                : request.getUsername();
+                ? request.getEmail() : request.getUsername();
 
         System.out.println("1. Login attempt for: '" + identifier + "'");
 
@@ -67,7 +66,8 @@ public class AuthServiceImp implements AuthService {
             System.out.println("✅ JWT generated");
 
             userService.updateLastLogin(user.getUsername());
-            System.out.println("✅ Last login updated");
+            userService.setUserOnline(user.getUsername(), true); // ✅ Mark online
+            System.out.println("✅ User marked online");
 
             return JwtResponse.builder()
                     .accessToken(jwt)
@@ -81,15 +81,12 @@ public class AuthServiceImp implements AuthService {
                     .build();
 
         } catch (DisabledException e) {
-            System.err.println("❌ Account disabled: " + e.getMessage());
             throw new UnauthorizedException("Account is deactivated. Please contact your administrator.");
         } catch (BadCredentialsException e) {
-            System.err.println("❌ Bad credentials: " + e.getMessage());
             throw new UnauthorizedException("Invalid email or password");
         } catch (UnauthorizedException e) {
             throw e;
         } catch (Exception e) {
-            System.err.println("❌ Unexpected error: " + e.getMessage());
             e.printStackTrace();
             throw new RuntimeException("Unexpected error: " + e.getMessage());
         }
@@ -103,14 +100,12 @@ public class AuthServiceImp implements AuthService {
     @Override
     public UserResponse getCurrentUser() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
         if (principal instanceof UserDetails) {
             String username = ((UserDetails) principal).getUsername();
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
             return UserResponse.fromUser(user);
         }
-
         throw new UnauthorizedException("No authenticated user found");
     }
 }

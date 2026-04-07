@@ -13,13 +13,14 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserResponse {
-    
+
     private Long userId;
     private String username;
     private String email;
     private String fullName;
     private Role role;
     private Boolean isActive;
+    private Boolean isOnline; // ✅ Added
     private LocalDateTime lastLogin;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -27,7 +28,7 @@ public class UserResponse {
 
     public static UserResponse fromUser(edu.cit.cararag.attendme.entity.User user) {
         if (user == null) return null;
-        
+
         return UserResponse.builder()
                 .userId(user.getUserId())
                 .username(user.getUsername())
@@ -35,6 +36,7 @@ public class UserResponse {
                 .fullName(user.getFullName())
                 .role(user.getRole())
                 .isActive(user.getIsActive() != null ? user.getIsActive() : false)
+                .isOnline(user.getIsOnline() != null ? user.getIsOnline() : false) // ✅ Added
                 .lastLogin(user.getLastLogin())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())

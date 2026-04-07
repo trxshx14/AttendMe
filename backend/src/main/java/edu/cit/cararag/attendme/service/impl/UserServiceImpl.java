@@ -33,29 +33,21 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse registerUser(RegisterRequest request) {
-        if (userRepository.existsByUsername(request.getUsername())) {
+        if (userRepository.existsByUsername(request.getUsername()))
             throw new DuplicateResourceException("User", "username", request.getUsername());
-        }
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmail(request.getEmail()))
             throw new DuplicateResourceException("User", "email", request.getEmail());
-        }
 
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setFullName(request.getFullName());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-
-        if (request.getRole() != null && request.getRole().equalsIgnoreCase("ADMIN")) {
-            user.setRole(Role.ADMIN);
-        } else {
-            user.setRole(Role.TEACHER);
-        }
-
+        user.setRole(request.getRole() != null && request.getRole().equalsIgnoreCase("ADMIN")
+                ? Role.ADMIN : Role.TEACHER);
         user.setIsActive(true);
-
-        User savedUser = userRepository.save(user);
-        return UserResponse.fromUser(savedUser);
+        user.setIsOnline(false);
+        return UserResponse.fromUser(userRepository.save(user));
     }
 
     @Override
@@ -65,16 +57,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse getUserByUsername(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
-        return UserResponse.fromUser(user);
+        return UserResponse.fromUser(userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username)));
     }
 
     @Override
     public UserResponse getUserByEmail(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
-        return UserResponse.fromUser(user);
+        return UserResponse.fromUser(userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email)));
     }
 
     @Override
@@ -109,35 +99,24 @@ public class UserServiceImpl implements UserService {
 
         if (request.getUsername() != null && !request.getUsername().isEmpty()) {
             if (!request.getUsername().equals(user.getUsername()) &&
-                    userRepository.existsByUsername(request.getUsername())) {
+                    userRepository.existsByUsername(request.getUsername()))
                 throw new DuplicateResourceException("User", "username", request.getUsername());
-            }
             user.setUsername(request.getUsername());
         }
-
         if (request.getEmail() != null && !request.getEmail().isEmpty()) {
             if (!request.getEmail().equals(user.getEmail()) &&
-                    userRepository.existsByEmail(request.getEmail())) {
+                    userRepository.existsByEmail(request.getEmail()))
                 throw new DuplicateResourceException("User", "email", request.getEmail());
-            }
             user.setEmail(request.getEmail());
         }
-
-        if (request.getFullName() != null && !request.getFullName().isEmpty()) {
+        if (request.getFullName() != null && !request.getFullName().isEmpty())
             user.setFullName(request.getFullName());
-        }
-
         if (request.getRole() != null && !request.getRole().isEmpty()) {
-            try {
-                user.setRole(Role.valueOf(request.getRole().toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                throw new ResourceNotFoundException("Role", "name", request.getRole());
-            }
+            try { user.setRole(Role.valueOf(request.getRole().toUpperCase())); }
+            catch (IllegalArgumentException e) { throw new ResourceNotFoundException("Role", "name", request.getRole()); }
         }
-
-        if (request.getIsActive() != null) {
+        if (request.getIsActive() != null)
             user.setIsActive(request.getIsActive());
-        }
 
         return UserResponse.fromUser(userRepository.save(user));
     }
@@ -146,10 +125,7 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
-
-        // Nullify attendance.marked_by FK before deleting to avoid constraint violation
         attendanceRepository.nullifyMarkedBy(id);
-
         userRepository.delete(user);
     }
 
@@ -180,12 +156,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public User getCurrentUser() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String username;
-        if (principal instanceof UserDetails) {
-            username = ((UserDetails) principal).getUsername();
-        } else {
-            username = principal.toString();
-        }
+        String username = principal instanceof UserDetails
+                ? ((UserDetails) principal).getUsername()
+                : principal.toString();
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
     }
@@ -202,6 +175,15 @@ public class UserServiceImpl implements UserService {
     public void updateProfilePicture(Long id, String profilePicUrl) {
         User user = findUserById(id);
         user.setProfilePicUrl(profilePicUrl);
+        userRepository.save(user);
+    }
+
+    // ✅ NEW
+    @Override
+    public void setUserOnline(String username, boolean online) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
+        user.setIsOnline(online);
         userRepository.save(user);
     }
 
