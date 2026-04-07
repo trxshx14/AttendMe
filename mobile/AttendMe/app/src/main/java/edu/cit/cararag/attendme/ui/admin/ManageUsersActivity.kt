@@ -3,6 +3,8 @@ package edu.cit.cararag.attendme.ui.admin
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
@@ -49,6 +51,15 @@ class ManageUsersActivity : AppCompatActivity() {
     private var allUsers = listOf<User>()
     private lateinit var token: String
 
+    // ✅ Auto-refresh every 10 seconds
+    private val refreshHandler = Handler(Looper.getMainLooper())
+    private val refreshRunnable = object : Runnable {
+        override fun run() {
+            loadUsers()
+            refreshHandler.postDelayed(this, 10_000)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_manage_users)
@@ -75,9 +86,9 @@ class ManageUsersActivity : AppCompatActivity() {
             activity       = this,
             coroutineScope = lifecycleScope,
             onEdit         = { showUserDialog(it) },
-            onToggleActive = { toggleActive(it) },
+            onToggleActive = { }, // ✅ No-op — toggle removed
             onDelete       = { confirmDelete(it) },
-            onRefresh      = { loadUsers() }  // ✅ refresh after pic upload
+            onRefresh      = { loadUsers() }
         )
         rvUsers.layoutManager = LinearLayoutManager(this)
         rvUsers.adapter       = adapter
@@ -93,9 +104,22 @@ class ManageUsersActivity : AppCompatActivity() {
         }
 
         loadUsers()
+        // ✅ Start auto-refresh
+        refreshHandler.postDelayed(refreshRunnable, 10_000)
     }
 
-    // ✅ Handle image picker result
+    override fun onResume() {
+        super.onResume()
+        // ✅ Refresh immediately when coming back to this screen
+        loadUsers()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // ✅ Stop auto-refresh when activity is destroyed
+        refreshHandler.removeCallbacks(refreshRunnable)
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == UserAdapter.PICK_IMAGE_REQUEST && resultCode == RESULT_OK) {
@@ -104,17 +128,17 @@ class ManageUsersActivity : AppCompatActivity() {
     }
 
     private fun loadUsers() {
-        showLoading(true)
         lifecycleScope.launch {
             val result = userRepo.getAllUsers()
             allUsers = result.getOrElse { emptyList() }
             withContext(Dispatchers.Main) {
-                showLoading(false)
+                // ✅ Show Online count instead of Active count
                 tvStatTotal.text    = allUsers.size.toString()
-                tvStatAdmins.text   = allUsers.count { it.role?.uppercase() == "ADMIN" }.toString()
-                tvStatTeachers.text = allUsers.count { it.role?.uppercase() == "TEACHER" }.toString()
-                tvStatActive.text   = allUsers.count { it.isActive == true }.toString()
+                tvStatAdmins.text   = allUsers.count { it.role.uppercase() == "ADMIN" }.toString()
+                tvStatTeachers.text = allUsers.count { it.role.uppercase() == "TEACHER" }.toString()
+                tvStatActive.text   = allUsers.count { it.isOnline == true }.toString()
                 filterUsers(etSearch.text.toString())
+                showLoading(false)
             }
         }
     }
@@ -149,7 +173,7 @@ class ManageUsersActivity : AppCompatActivity() {
             tvTitle.text = "Edit User"
             etFullName.setText(editUser.fullName)
             etEmail.setText(editUser.email)
-            val idx = roles.indexOf(editUser.role?.uppercase())
+            val idx = roles.indexOf(editUser.role.uppercase())
             if (idx >= 0) spinner.setSelection(idx)
             tvPassLabel.text = "NEW PASSWORD (OPTIONAL)"
             etPassword.hint  = "Leave empty to keep current"
@@ -225,36 +249,6 @@ class ManageUsersActivity : AppCompatActivity() {
             }
         }
         dialog.show()
-    }
-
-    private fun toggleActive(user: User) {
-        val isActive = user.isActive == true
-        AlertDialog.Builder(this)
-            .setTitle(if (isActive) "Deactivate User" else "Activate User")
-            .setMessage("${if (isActive) "Deactivate" else "Activate"} ${user.fullName}?")
-            .setPositiveButton(if (isActive) "Deactivate" else "Activate") { _, _ ->
-                lifecycleScope.launch(Dispatchers.IO) {
-                    try {
-                        val endpoint = if (isActive) "deactivate" else "activate"
-                        val req = Request.Builder()
-                            .url("http://10.0.2.2:8888/api/users/${user.userId}/$endpoint")
-                            .header("Authorization", "Bearer $token")
-                            .patch("".toRequestBody(jsonType)).build()
-                        val success = httpClient.newCall(req).execute().isSuccessful
-                        withContext(Dispatchers.Main) {
-                            if (success) loadUsers()
-                            Toast.makeText(this@ManageUsersActivity,
-                                if (success) "Done" else "Failed", Toast.LENGTH_SHORT).show()
-                        }
-                    } catch (e: Exception) {
-                        withContext(Dispatchers.Main) {
-                            Toast.makeText(this@ManageUsersActivity,
-                                "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }
-            }
-            .setNegativeButton("Cancel", null).show()
     }
 
     private fun confirmDelete(user: User) {

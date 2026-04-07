@@ -49,14 +49,37 @@ class AdminDashboardActivity : AppCompatActivity() {
             startActivity(Intent(this, AdminReportsActivity::class.java))
         }
 
+        // ✅ Updated logout — calls backend first to mark user offline
         findViewById<Button>(R.id.btnLogout).setOnClickListener {
-            sessionManager.clearSession()
-            startActivity(Intent(this, LoginActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            })
+            logoutAndRedirect()
         }
 
         loadDashboardData()
+    }
+
+    // ✅ New logout helper — marks user offline on server before clearing session
+    private fun logoutAndRedirect() {
+        val token = sessionManager.getAccessToken() ?: ""
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val req = Request.Builder()
+                    .url("http://10.0.2.2:8888/api/auth/logout")
+                    .header("Authorization", "Bearer $token")
+                    .post(okhttp3.RequestBody.create(null, ByteArray(0)))
+                    .build()
+                httpClient.newCall(req).execute()
+                android.util.Log.d("Logout", "✅ Admin marked offline on server")
+            } catch (e: Exception) {
+                android.util.Log.e("Logout", "Logout API error: ${e.message}")
+            } finally {
+                withContext(Dispatchers.Main) {
+                    sessionManager.clearSession()
+                    startActivity(Intent(this@AdminDashboardActivity, LoginActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    })
+                }
+            }
+        }
     }
 
     private fun loadDashboardData() {
@@ -92,16 +115,13 @@ class AdminDashboardActivity : AppCompatActivity() {
                     totalStudents / totalClasses else 0
 
                 withContext(Dispatchers.Main) {
-                    // Mini stats in banner
-                    findViewById<TextView>(R.id.tvMiniStudents).text  = totalStudents.toString()
-                    findViewById<TextView>(R.id.tvMiniClasses).text   = totalClasses.toString()
-                    findViewById<TextView>(R.id.tvMiniTeachers).text  = totalTeachers.toString()
-
-                    // Stat cards
-                    findViewById<TextView>(R.id.tvStatStudents).text  = totalStudents.toString()
-                    findViewById<TextView>(R.id.tvStatTeachers).text  = totalTeachers.toString()
-                    findViewById<TextView>(R.id.tvStatClasses).text   = totalClasses.toString()
-                    findViewById<TextView>(R.id.tvStatAvgSize).text   = avgClassSize.toString()
+                    findViewById<TextView>(R.id.tvMiniStudents).text = totalStudents.toString()
+                    findViewById<TextView>(R.id.tvMiniClasses).text  = totalClasses.toString()
+                    findViewById<TextView>(R.id.tvMiniTeachers).text = totalTeachers.toString()
+                    findViewById<TextView>(R.id.tvStatStudents).text = totalStudents.toString()
+                    findViewById<TextView>(R.id.tvStatTeachers).text = totalTeachers.toString()
+                    findViewById<TextView>(R.id.tvStatClasses).text  = totalClasses.toString()
+                    findViewById<TextView>(R.id.tvStatAvgSize).text  = avgClassSize.toString()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()

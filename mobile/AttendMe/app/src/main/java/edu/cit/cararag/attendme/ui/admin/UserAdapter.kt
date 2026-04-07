@@ -70,30 +70,20 @@ class UserAdapter(
 
         holder.tvFullName.text = name
         holder.tvEmail.text    = user.email ?: ""
-        holder.tvRole.text     = if (user.role?.uppercase() == "ADMIN") "Admin" else "Teacher"
+        holder.tvRole.text     = if (user.role.uppercase() == "ADMIN") "Admin" else "Teacher"
 
-        val isActive = user.isActive == true
-        holder.tvStatus.text = if (isActive) "Active" else "Inactive"
+        // ✅ Use isOnline for status display instead of isActive
+        val isOnline = user.isOnline == true
+        holder.tvStatus.text = if (isOnline) "Online" else "Offline"
         holder.tvStatus.setTextColor(
-            android.graphics.Color.parseColor(if (isActive) "#16A34A" else "#DC2626")
+            android.graphics.Color.parseColor(if (isOnline) "#16A34A" else "#DC2626")
         )
         holder.tvStatus.setBackgroundResource(
-            if (isActive) R.drawable.bg_status_active else R.drawable.bg_status_inactive
+            if (isOnline) R.drawable.bg_status_active else R.drawable.bg_status_inactive
         )
 
-        // --- FIX STARTS HERE ---
-        // 1. Clear the text so the emoji disappears
-        holder.btnToggle.text = ""
-
-        // 2. Set the vector icon based on the user's status
-        if (isActive) {
-            holder.btnToggle.setIconResource(R.drawable.ic_pause_standard)
-        } else {
-            // If you have a play arrow icon, use it here.
-            // Otherwise, it will stay as the pause icon for now.
-            holder.btnToggle.setIconResource(R.drawable.ic_pause_standard)
-        }
-        // --- FIX ENDS HERE ---
+        // ✅ Hide toggle button — status is now automatic based on login session
+        holder.btnToggle.visibility = View.GONE
 
         loadAvatar(holder, user)
 
@@ -104,7 +94,6 @@ class UserAdapter(
         }
 
         holder.btnEdit.setOnClickListener   { onEdit(user) }
-        holder.btnToggle.setOnClickListener { onToggleActive(user) }
         holder.btnDelete.setOnClickListener { onDelete(user) }
     }
 
@@ -112,7 +101,6 @@ class UserAdapter(
         if (!user.profilePicUrl.isNullOrBlank()) {
             holder.ivAvatar.visibility       = View.VISIBLE
             holder.layoutInitials.visibility = View.GONE
-            // Use timestamp-based ObjectKey to force Glide to bypass all caches
             Glide.with(holder.ivAvatar.context)
                 .load(user.profilePicUrl)
                 .signature(ObjectKey(System.currentTimeMillis().toString()))
@@ -138,12 +126,10 @@ class UserAdapter(
 
         coroutineScope.launch(Dispatchers.IO) {
             try {
-                // Copy URI to temp file
                 val inputStream = activity.contentResolver.openInputStream(uri) ?: return@launch
                 val tempFile = File(activity.cacheDir, "upload_${userId}.jpg")
                 FileOutputStream(tempFile).use { out -> inputStream.copyTo(out) }
 
-                // Build multipart request
                 val requestBody = MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
                     .addFormDataPart(
@@ -161,15 +147,13 @@ class UserAdapter(
                 val response = httpClient.newCall(request).execute()
                 val success  = response.isSuccessful
 
-                // Clear Glide disk cache on IO thread BEFORE refreshing
                 Glide.get(activity).clearDiskCache()
 
                 withContext(Dispatchers.Main) {
-                    // Clear Glide memory cache on main thread
                     Glide.get(activity).clearMemory()
                     if (success) {
                         Toast.makeText(activity, "Profile picture updated!", Toast.LENGTH_SHORT).show()
-                        onRefresh() // Reload list with fresh images
+                        onRefresh()
                     } else {
                         Toast.makeText(activity, "Failed to upload picture", Toast.LENGTH_SHORT).show()
                     }
