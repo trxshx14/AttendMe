@@ -6,6 +6,7 @@ import edu.cit.cararag.attendme.dto.requestdto.RegisterRequest;
 import edu.cit.cararag.attendme.dto.response.ApiResponse;
 import edu.cit.cararag.attendme.dto.response.JwtResponse;
 import edu.cit.cararag.attendme.dto.response.UserResponse;
+import edu.cit.cararag.attendme.security.JwtUtils;
 import edu.cit.cararag.attendme.service.AuthService;
 import edu.cit.cararag.attendme.service.GoogleAuthService;
 import edu.cit.cararag.attendme.service.UserService;
@@ -29,7 +30,10 @@ public class AuthController {
     private GoogleAuthService googleAuthService;
 
     @Autowired
-    private UserService userService; // ✅ Moved inside the class
+    private UserService userService;
+
+    @Autowired
+    private JwtUtils jwtUtils;
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<JwtResponse>> login(@Valid @RequestBody LoginRequest request) {
@@ -73,11 +77,34 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
+            // ✅ Read token directly from header — works even when JWT filter skips this endpoint
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @AuthenticationPrincipal UserDetails userDetails) {
         System.out.println("✅ AuthController.logout() called!");
         try {
+            String username = null;
+
+            // ✅ Try @AuthenticationPrincipal first (works when JWT filter processes request)
             if (userDetails != null) {
-                userService.setUserOnline(userDetails.getUsername(), false); // ✅ Mark offline
+                username = userDetails.getUsername();
+                System.out.println("✅ Got username from SecurityContext: " + username);
+            }
+            // ✅ Fallback: parse token manually from header
+            else if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+                try {
+                    username = jwtUtils.getUserNameFromJwtToken(token);
+                    System.out.println("✅ Got username from token header: " + username);
+                } catch (Exception e) {
+                    System.err.println("Could not parse token: " + e.getMessage());
+                }
+            }
+
+            if (username != null && !username.isBlank()) {
+                userService.setUserOnline(username, false);
+                System.out.println("✅ User marked offline: " + username);
+            } else {
+                System.err.println("⚠️ Could not determine username for logout");
             }
         } catch (Exception e) {
             System.err.println("Logout error: " + e.getMessage());
@@ -102,7 +129,7 @@ public class AuthController {
                         .body(ApiResponse.error("Either accessToken or idToken is required"));
             }
 
-            // ✅ Mark user online after Google login too
+            // ✅ Mark user online after Google login
             userService.setUserOnline(response.getUsername(), true);
 
             return ResponseEntity.ok(ApiResponse.success("Google login successful", response));

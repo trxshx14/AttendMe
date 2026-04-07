@@ -31,9 +31,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
-    // Only truly public endpoints — do NOT put /api/users here
+    // ✅ Only specific auth endpoints are public — NOT /api/auth/logout
     private static final List<String> PUBLIC_ENDPOINTS = Arrays.asList(
-        "/api/auth/",
+        "/api/auth/login",
+        "/api/auth/register",
+        "/api/auth/google",
+        "/api/auth/test",
         "/api/test/",
         "/api/test-auth/",
         "/api/users/ping",
@@ -45,7 +48,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String path = request.getRequestURI();
+        String path   = request.getRequestURI();
         String method = request.getMethod();
         logger.debug("Processing request: {} {}", method, path);
 
@@ -57,8 +60,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         // For all other endpoints, always try to parse JWT
-        // (GET /api/users will still work without token — SecurityConfig allows it)
-        // (DELETE/PUT/PATCH /api/users/** need token — SecurityConfig requires it)
         try {
             String jwt = parseJwt(request);
             logger.debug("JWT token present: {}", jwt != null);
