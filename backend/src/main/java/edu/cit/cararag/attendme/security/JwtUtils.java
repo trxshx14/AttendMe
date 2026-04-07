@@ -14,6 +14,7 @@ import java.util.Date;
 
 @Component
 public class JwtUtils {
+
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
     @Value("${jwt.secret}")
@@ -29,45 +30,35 @@ public class JwtUtils {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 
-    // Original — used by standard login (Authentication object)
-    public String generateJwtToken(Authentication authentication) {
-        UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
-        return Jwts.builder()
-                .setSubject(userPrincipal.getUsername())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .signWith(key(), SignatureAlgorithm.HS256)
-                .compact();
-    }
-
-    // Overload — used by Google auth (UserDetails object)
-    public String generateJwtToken(UserDetails userDetails) {
-        return Jwts.builder()
-                .setSubject(userDetails.getUsername())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .signWith(key(), SignatureAlgorithm.HS256)
-                .compact();
-    }
-
-    // Generate refresh token — longer expiry
-    public String generateRefreshToken(UserDetails userDetails) {
-        return Jwts.builder()
-                .setSubject(userDetails.getUsername())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + refreshExpirationMs))
-                .signWith(key(), SignatureAlgorithm.HS256)
-                .compact();
-    }
-
-    public String generateTokenFromUsername(String username) {
+    private String buildToken(String username, long expiryMs) {
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
+                .setExpiration(new Date(System.currentTimeMillis() + expiryMs))
                 .signWith(key(), SignatureAlgorithm.HS256)
                 .compact();
     }
+
+    public String generateJwtToken(Authentication authentication) {
+        UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
+        return buildToken(userPrincipal.getUsername(), jwtExpirationMs);
+    }
+
+    
+    public String generateJwtToken(UserDetails userDetails) {
+        return buildToken(userDetails.getUsername(), jwtExpirationMs);
+    }
+
+    
+    public String generateRefreshToken(UserDetails userDetails) {
+        return buildToken(userDetails.getUsername(), refreshExpirationMs);
+    }
+
+    
+    public String generateTokenFromUsername(String username) {
+        return buildToken(username, jwtExpirationMs);
+    }
+
 
     public String getUserNameFromJwtToken(String token) {
         return Jwts.parserBuilder().setSigningKey(key()).build()
