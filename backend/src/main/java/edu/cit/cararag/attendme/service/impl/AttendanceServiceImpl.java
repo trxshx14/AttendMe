@@ -199,6 +199,14 @@ public class AttendanceServiceImpl implements AttendanceService {
     public boolean hasAttendanceBeenMarked(Long classId, Long studentId, LocalDate date) {
         return attendanceRepository.existsBySchoolClass_ClassIdAndStudent_StudentIdAndDate(classId, studentId, date);
     }
+
+    @Override
+public List<AttendanceResponse> getAttendanceByClassAndDateRange(Long classId, LocalDate startDate, LocalDate endDate) {
+    return attendanceRepository.findBySchoolClass_ClassIdAndDateBetween(classId, startDate, endDate)
+            .stream()
+            .map(this::mapToResponse)
+            .collect(Collectors.toList());
+}
     
     private Attendance findAttendanceById(Long id) {
         return attendanceRepository.findById(id)

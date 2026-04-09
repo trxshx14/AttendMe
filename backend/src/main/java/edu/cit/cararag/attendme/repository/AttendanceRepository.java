@@ -11,24 +11,15 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * REPOSITORY PATTERN
- *
- * Abstracts all Attendance data access
- * behind this interface. AttendanceService
- * depends ONLY on this contract, never
- * on EntityManager or raw SQL.
- *
- * Enables: swapping Supabase PostgreSQL
- * for any JPA-compatible DB with zero
- * service code changes.
- */
 @Repository
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
     List<Attendance> findBySchoolClass_ClassIdAndDate(Long classId, LocalDate date);
 
     List<Attendance> findByStudent_StudentIdAndDateBetween(Long studentId, LocalDate startDate, LocalDate endDate);
+
+    // ✅ NEW — used for weekly class report
+    List<Attendance> findBySchoolClass_ClassIdAndDateBetween(Long classId, LocalDate startDate, LocalDate endDate);
 
     List<Attendance> findBySchoolClass_ClassIdAndStudent_StudentIdAndDate(Long classId, Long studentId, LocalDate date);
 
@@ -50,7 +41,6 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
     boolean existsBySchoolClass_ClassIdAndStudent_StudentIdAndDate(Long classId, Long studentId, LocalDate date);
 
-    // Nullify marked_by FK before deleting a user
     @Modifying
     @Query("UPDATE Attendance a SET a.markedBy = null WHERE a.markedBy.userId = :userId")
     void nullifyMarkedBy(@Param("userId") Long userId);

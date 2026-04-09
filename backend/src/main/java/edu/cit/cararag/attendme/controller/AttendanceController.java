@@ -85,6 +85,17 @@ public class AttendanceController {
         return ResponseEntity.ok(ApiResponse.success("Attendance records retrieved", responses));
     }
 
+    // ✅ NEW — weekly report endpoint
+    @GetMapping("/class/{classId}/range")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+    public ResponseEntity<ApiResponse<List<AttendanceResponse>>> getAttendanceByClassAndDateRange(
+            @PathVariable Long classId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        List<AttendanceResponse> responses = attendanceService.getAttendanceByClassAndDateRange(classId, startDate, endDate);
+        return ResponseEntity.ok(ApiResponse.success("Attendance records retrieved", responses));
+    }
+
     @GetMapping("/class/{classId}/summary/{date}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     public ResponseEntity<ApiResponse<Map<String, Long>>> getAttendanceSummary(
