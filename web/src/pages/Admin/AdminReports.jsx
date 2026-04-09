@@ -150,7 +150,7 @@ const AdminReports = () => {
             <option value="">Choose a class</option>
             {classes.map(cls => (
               <option key={cls.classId} value={cls.classId}>
-                {cls.className} — {cls.subject}
+                {cls.className} — {cls.section}
               </option>
             ))}
           </select>
