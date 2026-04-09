@@ -6,19 +6,19 @@ import {
 import './AdminReports.css';
 
 const AdminReports = () => {
-  const [classes, setClasses]               = useState([]);
-  const [selectedClass, setSelectedClass]   = useState('');
-  const [dateRange, setDateRange]           = useState({
+  const [classes, setClasses]                     = useState([]);
+  const [selectedClass, setSelectedClass]         = useState('');
+  const [dateRange, setDateRange]                 = useState({
     startDate: new Date(new Date().setDate(new Date().getDate() - 7)).toISOString().split('T')[0],
     endDate:   new Date().toISOString().split('T')[0],
   });
   const [attendanceRecords, setAttendanceRecords] = useState([]);
-  const [summary, setSummary]               = useState(null);
-  const [loading, setLoading]               = useState(true);
-  const [reportLoading, setReportLoading]   = useState(false);
-  const [error, setError]                   = useState('');
-  const [viewMode, setViewMode]             = useState('daily'); // 'daily' | 'weekly'
-  const [reportGenerated, setReportGenerated] = useState(false);
+  const [summary, setSummary]                     = useState(null);
+  const [loading, setLoading]                     = useState(true);
+  const [reportLoading, setReportLoading]         = useState(false);
+  const [error, setError]                         = useState('');
+  const [viewMode, setViewMode]                   = useState('daily'); // 'daily' | 'weekly'
+  const [reportGenerated, setReportGenerated]     = useState(false);
 
   useEffect(() => { fetchClasses(); }, []);
 
@@ -49,30 +49,39 @@ const AdminReports = () => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      let url;
+      let records = [];
 
       if (viewMode === 'daily') {
-        // Single day — use startDate only
-        url = `http://localhost:8888/api/attendance/class/${selectedClass}/report/${dateRange.startDate}`;
+        // Daily — use existing /report/{date} endpoint
+        const url  = `http://localhost:8888/api/attendance/class/${selectedClass}/report/${dateRange.startDate}`;
+        const res  = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+
+        if (data.success) {
+          records = data.data?.attendanceList || [];
+        } else {
+          setError(data.message || 'Failed to generate report');
+          return;
+        }
+
       } else {
-        // Weekly — use date range
-        url = `http://localhost:8888/api/attendance/class/${selectedClass}/range?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`;
+        // Weekly — use new /range endpoint
+        const url  = `http://localhost:8888/api/attendance/class/${selectedClass}/range?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`;
+        const res  = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+
+        if (data.success) {
+          records = data.data || [];
+        } else {
+          setError(data.message || 'Failed to generate report');
+          return;
+        }
       }
 
-      const res  = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
-      const data = await res.json();
+      setAttendanceRecords(records);
+      computeSummary(records);
+      setReportGenerated(true);
 
-      if (data.success) {
-        const records = viewMode === 'daily'
-          ? (data.data?.attendanceList || [])
-          : (data.data || []);
-
-        setAttendanceRecords(records);
-        computeSummary(records);
-        setReportGenerated(true);
-      } else {
-        setError(data.message || 'Failed to generate report');
-      }
     } catch {
       setError('Failed to generate report');
     } finally {
@@ -112,8 +121,13 @@ const AdminReports = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  const getStatusColor = (s) => ({ present: '#10b981', absent: '#ef4444', late: '#f59e0b', excused: '#8b5cf6' }[s?.toLowerCase()] || '#64748b');
-  const getStatusBg    = (s) => ({ present: '#d1fae5', absent: '#fee2e2', late: '#fef3c7', excused: '#ede9fe' }[s?.toLowerCase()] || '#f1f5f9');
+  const getStatusColor = (s) => ({
+    present: '#10b981', absent: '#ef4444', late: '#f59e0b', excused: '#8b5cf6'
+  }[s?.toLowerCase()] || '#64748b');
+
+  const getStatusBg = (s) => ({
+    present: '#d1fae5', absent: '#fee2e2', late: '#fef3c7', excused: '#ede9fe'
+  }[s?.toLowerCase()] || '#f1f5f9');
 
   if (loading) return <div className="ar-loading">Loading reports...</div>;
 
@@ -158,15 +172,23 @@ const AdminReports = () => {
 
         <div className="filter-group">
           <label className="filter-label">{viewMode === 'daily' ? 'Date' : 'Start Date'}</label>
-          <input type="date" className="date-input" value={dateRange.startDate}
-            onChange={e => setDateRange(prev => ({ ...prev, startDate: e.target.value }))} />
+          <input
+            type="date"
+            className="date-input"
+            value={dateRange.startDate}
+            onChange={e => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+          />
         </div>
 
         {viewMode === 'weekly' && (
           <div className="filter-group">
             <label className="filter-label">End Date</label>
-            <input type="date" className="date-input" value={dateRange.endDate}
-              onChange={e => setDateRange(prev => ({ ...prev, endDate: e.target.value }))} />
+            <input
+              type="date"
+              className="date-input"
+              value={dateRange.endDate}
+              onChange={e => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+            />
           </div>
         )}
 
@@ -236,8 +258,8 @@ const AdminReports = () => {
             {viewMode === 'daily' ? 'Daily Attendance Report' : 'Weekly Attendance Report'}
             <span className="report-date-range">
               {viewMode === 'daily'
-                ? new Date(dateRange.startDate).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' })
-                : `${new Date(dateRange.startDate).toLocaleDateString()} – ${new Date(dateRange.endDate).toLocaleDateString()}`
+                ? new Date(dateRange.startDate + 'T00:00:00').toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' })
+                : `${new Date(dateRange.startDate + 'T00:00:00').toLocaleDateString()} – ${new Date(dateRange.endDate + 'T00:00:00').toLocaleDateString()}`
               }
             </span>
           </h3>
@@ -255,7 +277,11 @@ const AdminReports = () => {
               <tbody>
                 {attendanceRecords.map((record, i) => (
                   <tr key={i}>
-                    <td>{new Date(record.date || dateRange.startDate).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                    <td>
+                      {new Date((record.date || dateRange.startDate) + 'T00:00:00').toLocaleDateString('en-PH', {
+                        month: 'short', day: 'numeric', year: 'numeric'
+                      })}
+                    </td>
                     <td className="student-cell">
                       <div className="student-avatar-small">
                         {record.studentName?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
@@ -294,6 +320,7 @@ const AdminReports = () => {
           <p>Select a class and date, then click Generate Report.</p>
         </div>
       )}
+
     </div>
   );
 };
