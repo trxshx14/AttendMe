@@ -21,6 +21,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/attendance")
 @RequiredArgsConstructor
+
+// IT342 Phase 3 – Web Main Feature Completed //
 public class AttendanceController {
 
     private final AttendanceService attendanceService;

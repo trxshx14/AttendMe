@@ -11,6 +11,8 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 
+// IT342 Phase 3 – Web Main Feature Completed //
+
 @Repository
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 

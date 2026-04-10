@@ -15,6 +15,9 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+
+// IT342 Phase 3 – Web Main Feature Completed //
+
 public class Attendance {
 
     @Id
