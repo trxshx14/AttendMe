@@ -9,8 +9,10 @@ import edu.cit.cararag.attendme.exception.DuplicateResourceException;
 import edu.cit.cararag.attendme.exception.ResourceNotFoundException;
 import edu.cit.cararag.attendme.repository.AttendanceRepository;
 import edu.cit.cararag.attendme.repository.UserRepository;
+import edu.cit.cararag.attendme.service.EmailService;
 import edu.cit.cararag.attendme.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -20,8 +22,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -30,6 +34,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AttendanceRepository attendanceRepository;
+    private final EmailService emailService;   // ← injected
 
     @Override
     public UserResponse registerUser(RegisterRequest request) {
@@ -38,16 +43,37 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsByEmail(request.getEmail()))
             throw new DuplicateResourceException("User", "email", request.getEmail());
 
+        // If no password provided, auto-generate one
+        String rawPassword = (request.getPassword() != null && !request.getPassword().isBlank())
+                ? request.getPassword()
+                : generateTemporaryPassword();
+
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setFullName(request.getFullName());
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setPasswordHash(passwordEncoder.encode(rawPassword));
         user.setRole(request.getRole() != null && request.getRole().equalsIgnoreCase("ADMIN")
                 ? Role.ADMIN : Role.TEACHER);
         user.setIsActive(true);
         user.setIsOnline(false);
-        return UserResponse.fromUser(userRepository.save(user));
+
+        User savedUser = userRepository.save(user);
+
+        // ── Send welcome email (async — won't block response) ──
+        try {
+            emailService.sendWelcomeEmail(
+                    savedUser.getEmail(),
+                    savedUser.getFullName(),
+                    savedUser.getUsername(),
+                    rawPassword
+            );
+        } catch (Exception e) {
+            // Email failure should NOT break account creation
+            log.warn("Welcome email could not be sent to {}: {}", savedUser.getEmail(), e.getMessage());
+        }
+
+        return UserResponse.fromUser(savedUser);
     }
 
     @Override
@@ -178,7 +204,6 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
-    // ✅ NEW
     @Override
     public void setUserOnline(String username, boolean online) {
         User user = userRepository.findByUsername(username)
@@ -187,8 +212,18 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
+    // ─── Private helpers ──────────────────────────────────────────────────────
+
     private User findUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+    }
+
+    /**
+     * Generates a random 8-character password like "Ax3#mK9z"
+     * Used when admin does not provide a password during account creation.
+     */
+    private String generateTemporaryPassword() {
+        return UUID.randomUUID().toString().replace("-", "").substring(0, 8);
     }
 }
