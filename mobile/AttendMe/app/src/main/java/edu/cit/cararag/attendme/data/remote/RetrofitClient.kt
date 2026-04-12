@@ -8,9 +8,10 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    // ⚠️ For emulator use 10.0.2.2 (maps to localhost on your PC)
-    // ⚠️ For real device use your PC's local IP e.g. 192.168.1.x
-    private const val BASE_URL = "http://10.0.2.2:8888/api/"
+    // ✅ Single source of truth for base URL
+    // Change this IP if your PC's IP changes
+    const val BASE_URL_RAW = "http://192.168.1.2:8888"
+    private const val BASE_URL = "$BASE_URL_RAW/api/"
 
     private var token: String? = null
 

@@ -20,6 +20,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.gson.Gson
 import edu.cit.cararag.attendme.R
 import edu.cit.cararag.attendme.data.model.User
+import edu.cit.cararag.attendme.data.remote.RetrofitClient
 import edu.cit.cararag.attendme.data.repository.UserRepository
 import edu.cit.cararag.attendme.utils.SessionManager
 import kotlinx.coroutines.Dispatchers
@@ -51,8 +52,8 @@ class ManageUsersActivity : AppCompatActivity() {
     private var allUsers = listOf<User>()
     private lateinit var token: String
 
-    // ✅ Auto-refresh every 10 seconds
-    private val refreshHandler = Handler(Looper.getMainLooper())
+    // Auto-refresh every 10 seconds
+    private val refreshHandler  = Handler(Looper.getMainLooper())
     private val refreshRunnable = object : Runnable {
         override fun run() {
             loadUsers()
@@ -86,7 +87,7 @@ class ManageUsersActivity : AppCompatActivity() {
             activity       = this,
             coroutineScope = lifecycleScope,
             onEdit         = { showUserDialog(it) },
-            onToggleActive = { }, // ✅ No-op — toggle removed
+            onToggleActive = { },
             onDelete       = { confirmDelete(it) },
             onRefresh      = { loadUsers() }
         )
@@ -104,19 +105,16 @@ class ManageUsersActivity : AppCompatActivity() {
         }
 
         loadUsers()
-        // ✅ Start auto-refresh
         refreshHandler.postDelayed(refreshRunnable, 10_000)
     }
 
     override fun onResume() {
         super.onResume()
-        // ✅ Refresh immediately when coming back to this screen
         loadUsers()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // ✅ Stop auto-refresh when activity is destroyed
         refreshHandler.removeCallbacks(refreshRunnable)
     }
 
@@ -132,7 +130,6 @@ class ManageUsersActivity : AppCompatActivity() {
             val result = userRepo.getAllUsers()
             allUsers = result.getOrElse { emptyList() }
             withContext(Dispatchers.Main) {
-                // ✅ Show Online count instead of Active count
                 tvStatTotal.text    = allUsers.size.toString()
                 tvStatAdmins.text   = allUsers.count { it.role.uppercase() == "ADMIN" }.toString()
                 tvStatTeachers.text = allUsers.count { it.role.uppercase() == "TEACHER" }.toString()
@@ -205,32 +202,49 @@ class ManageUsersActivity : AppCompatActivity() {
             lifecycleScope.launch(Dispatchers.IO) {
                 try {
                     val success = if (editUser == null) {
+                        // ── CREATE: username auto-derived from email ──
                         val username = email.split("@")[0].replace(Regex("[^a-zA-Z0-9]"), "")
                         val data = mapOf(
-                            "username" to username, "email" to email,
-                            "fullName" to fullName, "password" to password, "role" to role
+                            "username" to username,
+                            "email"    to email,
+                            "fullName" to fullName,
+                            "password" to password,
+                            "role"     to role
                         )
+                        // ✅ Uses RetrofitClient.BASE_URL_RAW — welcome email fires on backend
                         val req = Request.Builder()
-                            .url("http://10.0.2.2:8888/api/auth/register")
-                            .post(gson.toJson(data).toRequestBody(jsonType)).build()
+                            .url("${RetrofitClient.BASE_URL_RAW}/api/auth/register")
+                            .post(gson.toJson(data).toRequestBody(jsonType))
+                            .build()
                         httpClient.newCall(req).execute().isSuccessful
+
                     } else {
+                        // ── UPDATE ──
                         val data = mutableMapOf<String, Any?>(
-                            "fullName" to fullName, "email" to email, "role" to role)
+                            "fullName" to fullName,
+                            "email"    to email,
+                            "role"     to role
+                        )
                         if (password.isNotBlank()) data["password"] = password
+
+                        // ✅ Uses RetrofitClient.BASE_URL_RAW
                         val req = Request.Builder()
-                            .url("http://10.0.2.2:8888/api/users/${editUser.userId}")
+                            .url("${RetrofitClient.BASE_URL_RAW}/api/users/${editUser.userId}")
                             .header("Authorization", "Bearer $token")
-                            .put(gson.toJson(data).toRequestBody(jsonType)).build()
+                            .put(gson.toJson(data).toRequestBody(jsonType))
+                            .build()
                         httpClient.newCall(req).execute().isSuccessful
                     }
+
                     withContext(Dispatchers.Main) {
                         if (success) {
                             dialog.dismiss()
                             loadUsers()
-                            Toast.makeText(this@ManageUsersActivity,
-                                if (editUser == null) "User created!" else "User updated!",
-                                Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this@ManageUsersActivity,
+                                if (editUser == null) "User created! Welcome email sent." else "User updated!",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         } else {
                             tvErr.text = "Failed to save user"
                             tvErr.visibility = View.VISIBLE
@@ -258,25 +272,34 @@ class ManageUsersActivity : AppCompatActivity() {
             .setPositiveButton("Delete") { _, _ ->
                 lifecycleScope.launch(Dispatchers.IO) {
                     try {
+                        // ✅ Uses RetrofitClient.BASE_URL_RAW
                         val req = Request.Builder()
-                            .url("http://10.0.2.2:8888/api/users/${user.userId}")
+                            .url("${RetrofitClient.BASE_URL_RAW}/api/users/${user.userId}")
                             .header("Authorization", "Bearer $token")
-                            .delete().build()
+                            .delete()
+                            .build()
                         val success = httpClient.newCall(req).execute().isSuccessful
                         withContext(Dispatchers.Main) {
                             if (success) loadUsers()
-                            Toast.makeText(this@ManageUsersActivity,
-                                if (success) "Deleted" else "Failed", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this@ManageUsersActivity,
+                                if (success) "User deleted" else "Failed to delete",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     } catch (e: Exception) {
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(this@ManageUsersActivity,
-                                "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this@ManageUsersActivity,
+                                "Error: ${e.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     }
                 }
             }
-            .setNegativeButton("Cancel", null).show()
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun showLoading(show: Boolean) {
