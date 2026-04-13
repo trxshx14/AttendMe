@@ -18,6 +18,7 @@ import com.google.android.material.button.MaterialButton
 import de.hdodenhof.circleimageview.CircleImageView
 import edu.cit.cararag.attendme.R
 import edu.cit.cararag.attendme.data.model.User
+import edu.cit.cararag.attendme.data.remote.RetrofitClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -72,7 +73,7 @@ class UserAdapter(
         holder.tvEmail.text    = user.email ?: ""
         holder.tvRole.text     = if (user.role.uppercase() == "ADMIN") "Admin" else "Teacher"
 
-        // ✅ Use isOnline for status display instead of isActive
+        // Online/Offline status
         val isOnline = user.isOnline == true
         holder.tvStatus.text = if (isOnline) "Online" else "Offline"
         holder.tvStatus.setTextColor(
@@ -82,11 +83,12 @@ class UserAdapter(
             if (isOnline) R.drawable.bg_status_active else R.drawable.bg_status_inactive
         )
 
-        // ✅ Hide toggle button — status is now automatic based on login session
+        // Hide toggle — status is automatic based on login session
         holder.btnToggle.visibility = View.GONE
 
         loadAvatar(holder, user)
 
+        // Tap avatar in list to change photo
         holder.frameAvatar.setOnClickListener {
             pendingUploadUserId = user.userId
             val intent = Intent(Intent.ACTION_PICK).apply { type = "image/*" }
@@ -120,10 +122,19 @@ class UserAdapter(
         }
     }
 
+    // ── Called from ManageUsersActivity.onActivityResult ─────────────────────
     fun handleImageResult(uri: Uri) {
         val userId = pendingUploadUserId ?: return
         pendingUploadUserId = null
+        uploadProfilePicture(userId, uri)
+    }
 
+    // ── Called from dialog photo picker ──────────────────────────────────────
+    fun handleDialogImageResult(userId: Long, uri: Uri) {
+        uploadProfilePicture(userId, uri)
+    }
+
+    private fun uploadProfilePicture(userId: Long, uri: Uri) {
         coroutineScope.launch(Dispatchers.IO) {
             try {
                 val inputStream = activity.contentResolver.openInputStream(uri) ?: return@launch
@@ -138,8 +149,9 @@ class UserAdapter(
                     )
                     .build()
 
+                // ✅ Uses RetrofitClient.BASE_URL_RAW — no more hardcoded 10.0.2.2
                 val request = Request.Builder()
-                    .url("http://10.0.2.2:8888/api/users/$userId/profile-picture")
+                    .url("${RetrofitClient.BASE_URL_RAW}/api/users/$userId/profile-picture")
                     .header("Authorization", "Bearer $token")
                     .post(requestBody)
                     .build()
@@ -177,6 +189,7 @@ class UserAdapter(
     }
 
     companion object {
-        const val PICK_IMAGE_REQUEST = 1001
+        const val PICK_IMAGE_REQUEST        = 1001
+        const val PICK_IMAGE_DIALOG_REQUEST = 1002
     }
 }

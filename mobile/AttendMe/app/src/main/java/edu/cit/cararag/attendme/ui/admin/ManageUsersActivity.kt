@@ -2,6 +2,7 @@ package edu.cit.cararag.attendme.ui.admin
 
 import android.app.AlertDialog
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -15,9 +16,13 @@ import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.signature.ObjectKey
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.gson.Gson
+import de.hdodenhof.circleimageview.CircleImageView
 import edu.cit.cararag.attendme.R
 import edu.cit.cararag.attendme.data.model.User
 import edu.cit.cararag.attendme.data.remote.RetrofitClient
@@ -51,6 +56,14 @@ class ManageUsersActivity : AppCompatActivity() {
 
     private var allUsers = listOf<User>()
     private lateinit var token: String
+
+    // ── Dialog photo state ────────────────────────────────────────────────────
+    private var dialogEditUser: User?         = null
+    private var dialogSavedUserId: Long?      = null
+    private var dialogSelectedPhotoUri: Uri?  = null
+    private var dialogIvAvatar: CircleImageView? = null
+    private var dialogLayoutInitials: LinearLayout? = null
+    private var dialogTvInitials: TextView?   = null
 
     // Auto-refresh every 10 seconds
     private val refreshHandler  = Handler(Looper.getMainLooper())
@@ -120,8 +133,26 @@ class ManageUsersActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == UserAdapter.PICK_IMAGE_REQUEST && resultCode == RESULT_OK) {
-            data?.data?.let { uri -> adapter.handleImageResult(uri) }
+        when {
+            // ── Photo from list item avatar tap ──
+            requestCode == UserAdapter.PICK_IMAGE_REQUEST && resultCode == RESULT_OK -> {
+                data?.data?.let { uri -> adapter.handleImageResult(uri) }
+            }
+            // ── Photo from dialog Choose Photo button ──
+            requestCode == UserAdapter.PICK_IMAGE_DIALOG_REQUEST && resultCode == RESULT_OK -> {
+                data?.data?.let { uri ->
+                    dialogSelectedPhotoUri = uri
+                    // Show preview in dialog
+                    dialogIvAvatar?.let { iv ->
+                        dialogLayoutInitials?.visibility = View.GONE
+                        iv.visibility = View.VISIBLE
+                        Glide.with(this)
+                            .load(uri)
+                            .circleCrop()
+                            .into(iv)
+                    }
+                }
+            }
         }
     }
 
@@ -152,28 +183,73 @@ class ManageUsersActivity : AppCompatActivity() {
     }
 
     private fun showUserDialog(editUser: User?) {
-        val view        = LayoutInflater.from(this).inflate(R.layout.dialog_user_form, null)
-        val tvTitle     = view.findViewById<TextView>(R.id.tvUserDialogTitle)
-        val tvErr       = view.findViewById<TextView>(R.id.tvUserDialogError)
-        val etFullName  = view.findViewById<EditText>(R.id.etFullName)
-        val etEmail     = view.findViewById<EditText>(R.id.etUserEmail)
-        val spinner     = view.findViewById<Spinner>(R.id.spinnerRole)
-        val etPassword  = view.findViewById<EditText>(R.id.etUserPassword)
-        val tvPassLabel = view.findViewById<TextView>(R.id.tvPasswordLabel)
-        val btnCancel   = view.findViewById<MaterialButton>(R.id.btnCancelUser)
-        val btnSave     = view.findViewById<MaterialButton>(R.id.btnSaveUser)
+        // Reset dialog photo state
+        dialogEditUser        = editUser
+        dialogSelectedPhotoUri = null
+        dialogSavedUserId     = editUser?.userId
+
+        val view           = LayoutInflater.from(this).inflate(R.layout.dialog_user_form, null)
+        val tvTitle        = view.findViewById<TextView>(R.id.tvUserDialogTitle)
+        val tvErr          = view.findViewById<TextView>(R.id.tvUserDialogError)
+        val etFullName     = view.findViewById<EditText>(R.id.etFullName)
+        val etEmail        = view.findViewById<EditText>(R.id.etUserEmail)
+        val spinner        = view.findViewById<Spinner>(R.id.spinnerRole)
+        val etPassword     = view.findViewById<EditText>(R.id.etUserPassword)
+        val tvPassLabel    = view.findViewById<TextView>(R.id.tvPasswordLabel)
+        val btnCancel      = view.findViewById<MaterialButton>(R.id.btnCancelUser)
+        val btnSave        = view.findViewById<MaterialButton>(R.id.btnSaveUser)
+        val btnChoosePhoto = view.findViewById<MaterialButton>(R.id.btnChoosePhoto)
+        val ivAvatar       = view.findViewById<CircleImageView>(R.id.ivDialogAvatar)
+        val layoutInitials = view.findViewById<LinearLayout>(R.id.layoutDialogInitials)
+        val tvInitials     = view.findViewById<TextView>(R.id.tvDialogInitials)
+
+        // Keep references for onActivityResult
+        dialogIvAvatar       = ivAvatar
+        dialogLayoutInitials = layoutInitials
+        dialogTvInitials     = tvInitials
 
         val roles = listOf("TEACHER", "ADMIN")
         spinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, roles)
 
         if (editUser != null) {
-            tvTitle.text = "Edit User"
+            tvTitle.text     = "Edit User"
             etFullName.setText(editUser.fullName)
             etEmail.setText(editUser.email)
             val idx = roles.indexOf(editUser.role.uppercase())
             if (idx >= 0) spinner.setSelection(idx)
             tvPassLabel.text = "NEW PASSWORD"
             etPassword.hint  = "Enter new password to reset — teacher will be notified by email"
+
+            // Load existing profile picture
+            if (!editUser.profilePicUrl.isNullOrBlank()) {
+                layoutInitials.visibility = View.GONE
+                ivAvatar.visibility       = View.VISIBLE
+                Glide.with(this)
+                    .load(editUser.profilePicUrl)
+                    .signature(ObjectKey(System.currentTimeMillis().toString()))
+                    .skipMemoryCache(true)
+                    .diskCacheStrategy(DiskCacheStrategy.NONE)
+                    .circleCrop()
+                    .into(ivAvatar)
+            } else {
+                ivAvatar.visibility       = View.GONE
+                layoutInitials.visibility = View.VISIBLE
+                val name = editUser.fullName ?: "?"
+                tvInitials.text = name.split(" ")
+                    .mapNotNull { it.firstOrNull()?.toString() }
+                    .take(2).joinToString("").uppercase()
+            }
+        } else {
+            // New user — show placeholder initials
+            ivAvatar.visibility       = View.GONE
+            layoutInitials.visibility = View.VISIBLE
+            tvInitials.text           = "?"
+        }
+
+        // Choose Photo button opens gallery
+        btnChoosePhoto.setOnClickListener {
+            val intent = Intent(Intent.ACTION_PICK).apply { type = "image/*" }
+            startActivityForResult(intent, UserAdapter.PICK_IMAGE_DIALOG_REQUEST)
         }
 
         val dialog = AlertDialog.Builder(this).setView(view).create()
@@ -197,12 +273,14 @@ class ManageUsersActivity : AppCompatActivity() {
             }
 
             btnSave.isEnabled = false
-            btnSave.text = "Saving..."
+            btnSave.text      = "Saving..."
 
             lifecycleScope.launch(Dispatchers.IO) {
                 try {
+                    var savedUserId: Long? = editUser?.userId
+
                     val success = if (editUser == null) {
-                        // ── CREATE: username auto-derived from email ──
+                        // ── CREATE ──
                         val username = email.split("@")[0].replace(Regex("[^a-zA-Z0-9]"), "")
                         val data = mapOf(
                             "username" to username,
@@ -211,12 +289,21 @@ class ManageUsersActivity : AppCompatActivity() {
                             "password" to password,
                             "role"     to role
                         )
-                        // ✅ Uses RetrofitClient.BASE_URL_RAW — welcome email fires on backend
                         val req = Request.Builder()
                             .url("${RetrofitClient.BASE_URL_RAW}/api/auth/register")
                             .post(gson.toJson(data).toRequestBody(jsonType))
                             .build()
-                        httpClient.newCall(req).execute().isSuccessful
+                        val response = httpClient.newCall(req).execute()
+                        // Parse userId from response for photo upload
+                        if (response.isSuccessful) {
+                            try {
+                                val body    = response.body?.string() ?: ""
+                                val jsonObj = com.google.gson.JsonParser.parseString(body).asJsonObject
+                                savedUserId = jsonObj.getAsJsonObject("data")
+                                    ?.get("userId")?.asLong
+                            } catch (_: Exception) {}
+                            true
+                        } else false
 
                     } else {
                         // ── UPDATE ──
@@ -227,7 +314,6 @@ class ManageUsersActivity : AppCompatActivity() {
                         )
                         if (password.isNotBlank()) data["password"] = password
 
-                        // ✅ Uses RetrofitClient.BASE_URL_RAW
                         val req = Request.Builder()
                             .url("${RetrofitClient.BASE_URL_RAW}/api/users/${editUser.userId}")
                             .header("Authorization", "Bearer $token")
@@ -236,15 +322,22 @@ class ManageUsersActivity : AppCompatActivity() {
                         httpClient.newCall(req).execute().isSuccessful
                     }
 
+                    // ── Upload photo if selected ──
+                    if (success && dialogSelectedPhotoUri != null && savedUserId != null) {
+                        adapter.handleDialogImageResult(savedUserId!!, dialogSelectedPhotoUri!!)
+                    }
+
                     withContext(Dispatchers.Main) {
                         if (success) {
                             dialog.dismiss()
                             loadUsers()
                             Toast.makeText(
                                 this@ManageUsersActivity,
-                                if (editUser == null) "User created! Welcome email sent."
-                                else if (password.isNotBlank()) "User updated! Teacher notified by email."
-                                else "User updated!",
+                                when {
+                                    editUser == null          -> "User created! Welcome email sent."
+                                    password.isNotBlank()     -> "User updated! Teacher notified by email."
+                                    else                      -> "User updated!"
+                                },
                                 Toast.LENGTH_SHORT
                             ).show()
                         } else {
@@ -274,7 +367,6 @@ class ManageUsersActivity : AppCompatActivity() {
             .setPositiveButton("Delete") { _, _ ->
                 lifecycleScope.launch(Dispatchers.IO) {
                     try {
-                        // ✅ Uses RetrofitClient.BASE_URL_RAW
                         val req = Request.Builder()
                             .url("${RetrofitClient.BASE_URL_RAW}/api/users/${user.userId}")
                             .header("Authorization", "Bearer $token")

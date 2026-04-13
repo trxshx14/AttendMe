@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="#FFFFFF">
 
     <LinearLayout
@@ -11,75 +11,225 @@
         android:orientation="vertical"
         android:padding="24dp">
 
+        <!-- Title -->
         <TextView android:id="@+id/tvUserDialogTitle"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="Register New User" android:textSize="18sp" android:textStyle="bold"
-            android:textColor="#0F2D5E" android:layout_marginBottom="16dp"/>
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Register New User"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#0F2D5E"
+            android:layout_marginBottom="16dp"/>
 
         <!-- Error -->
         <TextView android:id="@+id/tvUserDialogError"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:background="@drawable/bg_error" android:padding="10dp"
-            android:textColor="#DC2626" android:textSize="13sp"
-            android:visibility="gone" android:layout_marginBottom="12dp"/>
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_error"
+            android:padding="10dp"
+            android:textColor="#DC2626"
+            android:textSize="13sp"
+            android:visibility="gone"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- Profile Photo -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="PROFILE PHOTO"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#0F2D5E"
+            android:letterSpacing="0.06"
+            android:layout_marginBottom="8dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_input"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp">
+
+            <!-- Avatar preview -->
+            <FrameLayout
+                android:layout_width="64dp"
+                android:layout_height="64dp">
+
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/ivDialogAvatar"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:src="@drawable/bg_circle_navy"
+                    app:civ_border_width="2dp"
+                    app:civ_border_color="#EBF2FF"/>
+
+                <!-- Initials fallback -->
+                <LinearLayout
+                    android:id="@+id/layoutDialogInitials"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:gravity="center"
+                    android:background="@drawable/bg_circle_navy"
+                    android:visibility="visible">
+                    <TextView
+                        android:id="@+id/tvDialogInitials"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="?"
+                        android:textColor="#FFFFFF"
+                        android:textSize="20sp"
+                        android:textStyle="bold"/>
+                </LinearLayout>
+
+            </FrameLayout>
+
+            <!-- Buttons -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="16dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnChoosePhoto"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:text="Choose Photo"
+                    android:textColor="#0F2D5E"
+                    android:textSize="13sp"
+                    android:backgroundTint="#EBF2FF"
+                    android:stateListAnimator="@null"
+                    android:layout_marginBottom="6dp"
+                    app:cornerRadius="8dp"
+                    app:icon="@drawable/ic_download"
+                    app:iconSize="16dp"
+                    app:iconTint="#0F2D5E"
+                    app:iconGravity="textStart"
+                    app:iconPadding="6dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="JPG, PNG or GIF · Max 2MB"
+                    android:textSize="11sp"
+                    android:textColor="#94A3B8"/>
+
+            </LinearLayout>
+        </LinearLayout>
 
         <!-- Full Name -->
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="FULL NAME *" android:textSize="11sp" android:textStyle="bold"
-            android:textColor="#0F2D5E" android:letterSpacing="0.06" android:layout_marginBottom="6dp"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="FULL NAME *"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#0F2D5E"
+            android:letterSpacing="0.06"
+            android:layout_marginBottom="6dp"/>
         <EditText android:id="@+id/etFullName"
-            android:layout_width="match_parent" android:layout_height="48dp"
-            android:hint="Enter full name" android:background="@drawable/bg_input"
-            android:paddingStart="14dp" android:paddingEnd="14dp"
-            android:textColor="#0F2D5E" android:textColorHint="#94A3B8"
-            android:textSize="14sp" android:inputType="textPersonName"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="Enter full name"
+            android:background="@drawable/bg_input"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:textColor="#0F2D5E"
+            android:textColorHint="#94A3B8"
+            android:textSize="14sp"
+            android:inputType="textPersonName"
             android:layout_marginBottom="16dp"/>
 
         <!-- Email -->
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="EMAIL ADDRESS *" android:textSize="11sp" android:textStyle="bold"
-            android:textColor="#0F2D5E" android:letterSpacing="0.06" android:layout_marginBottom="6dp"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="EMAIL ADDRESS *"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#0F2D5E"
+            android:letterSpacing="0.06"
+            android:layout_marginBottom="6dp"/>
         <EditText android:id="@+id/etUserEmail"
-            android:layout_width="match_parent" android:layout_height="48dp"
-            android:hint="user@school.edu" android:background="@drawable/bg_input"
-            android:paddingStart="14dp" android:paddingEnd="14dp"
-            android:textColor="#0F2D5E" android:textColorHint="#94A3B8"
-            android:textSize="14sp" android:inputType="textEmailAddress"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="user@school.edu"
+            android:background="@drawable/bg_input"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:textColor="#0F2D5E"
+            android:textColorHint="#94A3B8"
+            android:textSize="14sp"
+            android:inputType="textEmailAddress"
             android:layout_marginBottom="16dp"/>
 
         <!-- Role -->
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="ROLE *" android:textSize="11sp" android:textStyle="bold"
-            android:textColor="#0F2D5E" android:letterSpacing="0.06" android:layout_marginBottom="6dp"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ROLE *"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#0F2D5E"
+            android:letterSpacing="0.06"
+            android:layout_marginBottom="6dp"/>
         <Spinner android:id="@+id/spinnerRole"
-            android:layout_width="match_parent" android:layout_height="48dp"
-            android:background="@drawable/bg_input" android:paddingStart="14dp"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_input"
+            android:paddingStart="14dp"
             android:layout_marginBottom="16dp"/>
 
         <!-- Password -->
         <TextView android:id="@+id/tvPasswordLabel"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="PASSWORD *" android:textSize="11sp" android:textStyle="bold"
-            android:textColor="#0F2D5E" android:letterSpacing="0.06" android:layout_marginBottom="6dp"/>
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="PASSWORD *"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#0F2D5E"
+            android:letterSpacing="0.06"
+            android:layout_marginBottom="6dp"/>
         <EditText android:id="@+id/etUserPassword"
-            android:layout_width="match_parent" android:layout_height="48dp"
-            android:hint="Enter password" android:background="@drawable/bg_input"
-            android:paddingStart="14dp" android:paddingEnd="14dp"
-            android:textColor="#0F2D5E" android:textColorHint="#94A3B8"
-            android:textSize="14sp" android:inputType="textPassword"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="Enter password"
+            android:background="@drawable/bg_input"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:textColor="#0F2D5E"
+            android:textColorHint="#94A3B8"
+            android:textSize="14sp"
+            android:inputType="textPassword"
             android:layout_marginBottom="24dp"/>
 
         <!-- Buttons -->
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="horizontal">
-            <com.google.android.material.button.MaterialButton android:id="@+id/btnCancelUser"
-                android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1"
-                android:text="Cancel" android:textColor="#0F2D5E" android:backgroundTint="#EBF2FF"
-                android:stateListAnimator="@null" android:layout_marginEnd="8dp"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCancelUser"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="Cancel"
+                android:textColor="#0F2D5E"
+                android:backgroundTint="#EBF2FF"
+                android:stateListAnimator="@null"
+                android:layout_marginEnd="8dp"
                 app:cornerRadius="12dp"/>
-            <com.google.android.material.button.MaterialButton android:id="@+id/btnSaveUser"
-                android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1"
-                android:text="Save" android:textColor="#FFFFFF" android:backgroundTint="#0F2D5E"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSaveUser"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="Save"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#0F2D5E"
                 android:stateListAnimator="@null"
                 app:cornerRadius="12dp"/>
         </LinearLayout>
