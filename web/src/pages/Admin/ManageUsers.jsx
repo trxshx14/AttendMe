@@ -428,10 +428,10 @@ const ManageUsers = () => {
                   </div>
                 ) : (
                   <div className="mu-form-group">
-                    <label className="mu-form-label">New Password (optional)</label>
+                    <label className="mu-form-label">New Password</label>
                     <input type="password" name="password" className="mu-form-input"
                       value={formData.password} onChange={handleInputChange}
-                      placeholder="Leave empty to keep current" />
+                      placeholder="Enter new password to reset — teacher will be notified by email" />
                   </div>
                 )}
               </div>
