@@ -172,8 +172,8 @@ class ManageUsersActivity : AppCompatActivity() {
             etEmail.setText(editUser.email)
             val idx = roles.indexOf(editUser.role.uppercase())
             if (idx >= 0) spinner.setSelection(idx)
-            tvPassLabel.text = "NEW PASSWORD (OPTIONAL)"
-            etPassword.hint  = "Leave empty to keep current"
+            tvPassLabel.text = "NEW PASSWORD"
+            etPassword.hint  = "Enter new password to reset — teacher will be notified by email"
         }
 
         val dialog = AlertDialog.Builder(this).setView(view).create()
@@ -242,7 +242,9 @@ class ManageUsersActivity : AppCompatActivity() {
                             loadUsers()
                             Toast.makeText(
                                 this@ManageUsersActivity,
-                                if (editUser == null) "User created! Welcome email sent." else "User updated!",
+                                if (editUser == null) "User created! Welcome email sent."
+                                else if (password.isNotBlank()) "User updated! Teacher notified by email."
+                                else "User updated!",
                                 Toast.LENGTH_SHORT
                             ).show()
                         } else {
