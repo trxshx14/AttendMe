@@ -34,7 +34,9 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AttendanceRepository attendanceRepository;
-    private final EmailService emailService;   // ← injected
+    private final EmailService emailService;
+
+    // ─── Register ─────────────────────────────────────────────────────────────
 
     @Override
     public UserResponse registerUser(RegisterRequest request) {
@@ -43,7 +45,6 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsByEmail(request.getEmail()))
             throw new DuplicateResourceException("User", "email", request.getEmail());
 
-        // If no password provided, auto-generate one
         String rawPassword = (request.getPassword() != null && !request.getPassword().isBlank())
                 ? request.getPassword()
                 : generateTemporaryPassword();
@@ -60,7 +61,7 @@ public class UserServiceImpl implements UserService {
 
         User savedUser = userRepository.save(user);
 
-        // ── Send welcome email (async — won't block response) ──
+        // ── Email 1: Welcome email on account creation ──
         try {
             emailService.sendWelcomeEmail(
                     savedUser.getEmail(),
@@ -69,12 +70,68 @@ public class UserServiceImpl implements UserService {
                     rawPassword
             );
         } catch (Exception e) {
-            // Email failure should NOT break account creation
             log.warn("Welcome email could not be sent to {}: {}", savedUser.getEmail(), e.getMessage());
         }
 
         return UserResponse.fromUser(savedUser);
     }
+
+    // ─── Update ───────────────────────────────────────────────────────────────
+
+    @Override
+    public UserResponse updateUser(Long id, UserUpdateRequest request) {
+        User user = findUserById(id);
+
+        if (request.getUsername() != null && !request.getUsername().isEmpty()) {
+            if (!request.getUsername().equals(user.getUsername()) &&
+                    userRepository.existsByUsername(request.getUsername()))
+                throw new DuplicateResourceException("User", "username", request.getUsername());
+            user.setUsername(request.getUsername());
+        }
+        if (request.getEmail() != null && !request.getEmail().isEmpty()) {
+            if (!request.getEmail().equals(user.getEmail()) &&
+                    userRepository.existsByEmail(request.getEmail()))
+                throw new DuplicateResourceException("User", "email", request.getEmail());
+            user.setEmail(request.getEmail());
+        }
+        if (request.getFullName() != null && !request.getFullName().isEmpty())
+            user.setFullName(request.getFullName());
+        if (request.getRole() != null && !request.getRole().isEmpty()) {
+            try { user.setRole(Role.valueOf(request.getRole().toUpperCase())); }
+            catch (IllegalArgumentException e) {
+                throw new ResourceNotFoundException("Role", "name", request.getRole());
+            }
+        }
+        if (request.getIsActive() != null)
+            user.setIsActive(request.getIsActive());
+
+        // ── Email 2: Notify teacher if admin updated their password ──
+        String rawNewPassword = null;
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            rawNewPassword = request.getPassword();
+            user.setPasswordHash(passwordEncoder.encode(rawNewPassword));
+        }
+
+        User savedUser = userRepository.save(user);
+
+        if (rawNewPassword != null) {
+            try {
+                emailService.sendPasswordUpdatedEmail(
+                        savedUser.getEmail(),
+                        savedUser.getFullName(),
+                        savedUser.getUsername(),
+                        rawNewPassword
+                );
+            } catch (Exception e) {
+                log.warn("Password updated email could not be sent to {}: {}",
+                        savedUser.getEmail(), e.getMessage());
+            }
+        }
+
+        return UserResponse.fromUser(savedUser);
+    }
+
+    // ─── Other methods (unchanged) ────────────────────────────────────────────
 
     @Override
     public UserResponse getUserById(Long id) {
@@ -117,34 +174,6 @@ public class UserServiceImpl implements UserService {
         return userRepository.findTeachersWithClasses(Role.TEACHER).stream()
                 .map(UserResponse::fromUser)
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    public UserResponse updateUser(Long id, UserUpdateRequest request) {
-        User user = findUserById(id);
-
-        if (request.getUsername() != null && !request.getUsername().isEmpty()) {
-            if (!request.getUsername().equals(user.getUsername()) &&
-                    userRepository.existsByUsername(request.getUsername()))
-                throw new DuplicateResourceException("User", "username", request.getUsername());
-            user.setUsername(request.getUsername());
-        }
-        if (request.getEmail() != null && !request.getEmail().isEmpty()) {
-            if (!request.getEmail().equals(user.getEmail()) &&
-                    userRepository.existsByEmail(request.getEmail()))
-                throw new DuplicateResourceException("User", "email", request.getEmail());
-            user.setEmail(request.getEmail());
-        }
-        if (request.getFullName() != null && !request.getFullName().isEmpty())
-            user.setFullName(request.getFullName());
-        if (request.getRole() != null && !request.getRole().isEmpty()) {
-            try { user.setRole(Role.valueOf(request.getRole().toUpperCase())); }
-            catch (IllegalArgumentException e) { throw new ResourceNotFoundException("Role", "name", request.getRole()); }
-        }
-        if (request.getIsActive() != null)
-            user.setIsActive(request.getIsActive());
-
-        return UserResponse.fromUser(userRepository.save(user));
     }
 
     @Override
@@ -219,10 +248,6 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
     }
 
-    /**
-     * Generates a random 8-character password like "Ax3#mK9z"
-     * Used when admin does not provide a password during account creation.
-     */
     private String generateTemporaryPassword() {
         return UUID.randomUUID().toString().replace("-", "").substring(0, 8);
     }
