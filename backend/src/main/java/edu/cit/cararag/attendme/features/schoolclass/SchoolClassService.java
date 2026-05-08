@@ -1,0 +1,32 @@
+package edu.cit.cararag.attendme.features.schoolclass;
+
+import edu.cit.cararag.attendme.features.schoolclass.dto.ClassRequest;
+import edu.cit.cararag.attendme.features.schoolclass.dto.SchoolClassResponse;
+import edu.cit.cararag.attendme.features.student.dto.StudentResponse;
+
+import java.util.List;
+
+public interface SchoolClassService {
+
+    SchoolClassResponse createClass(ClassRequest request);
+
+    SchoolClassResponse getClassById(Long id);
+
+    List<SchoolClassResponse> getAllClasses();
+
+    List<SchoolClassResponse> getClassesByTeacher(Long teacherId);
+
+    List<SchoolClassResponse> getClassesByAcademicYear(String academicYear);
+
+    SchoolClassResponse updateClass(Long id, ClassRequest request);
+
+    void deleteClass(Long id);
+
+    SchoolClassResponse addStudentToClass(Long classId, Long studentId);
+
+    SchoolClassResponse removeStudentFromClass(Long classId, Long studentId);
+
+    List<StudentResponse> getStudentsInClass(Long classId);
+
+    Long getStudentCountInClass(Long classId);
+}
