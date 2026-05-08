@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { classService } from '../../services/classService';
-import { userService } from '../../services/userService';
-import { studentService } from '../../services/studentService';
+import { classService } from '../class/classService';
+import { userService } from '../user/userService';
+import { studentService } from '../../shared/studentService';
 import {
   School, GraduationCap, Users, Search, Clock,
   Pencil, Trash2, X, Plus, UserCircle2

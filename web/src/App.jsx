@@ -6,19 +6,19 @@ import PrivateRoute from './components/PrivateRoute';
 import Layout from './components/layout/Layout';
 
 // Login
-import Login from './pages/Login/Login';
+import Login from './features/auth/Login';
 
 // Admin Pages
-import AdminDashboard from './pages/Admin/AdminDashboard';
-import ManageUsers from './pages/Admin/ManageUsers';
-import ManageClasses from './pages/Admin/ManageClasses';
-import AdminReports from './pages/Admin/AdminReports';
+import AdminDashboard from './features/dashboard/AdminDashboard';
+import ManageUsers from './features/user/ManageUsers';
+import ManageClasses from './features/class/ManageClasses';
+import AdminReports from './features/report/AdminReports';
 
 // Teacher Pages
-import TeacherDashboard from './pages/Teacher/TeacherDashboard';
-import TakeAttendance from './pages/Teacher/TakeAttendance';
-import AttendanceHistory from './pages/Teacher/AttendanceHistory';
-import TeacherReports from './pages/Teacher/TeacherReports';
+import TeacherDashboard from './features/dashboard/TeacherDashboard';
+import TakeAttendance from './features/attendance/TakeAttendance';
+import AttendanceHistory from './features/attendance/AttendanceHistory';
+import TeacherReports from './features/report/TeacherReports';
 
 import './App.css';
 

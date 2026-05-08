@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { userService } from '../../services/userService';
+import { userService } from '../user/userService';
 import { useAuth } from '../../context/AuthContext';
 import {
   Users, ShieldCheck, UserCircle2, CheckCircle2,

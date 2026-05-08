@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Wind, Droplets, RefreshCw, AlertTriangle } from 'lucide-react';
 import './WeatherWidget.css';
-import { getWeatherInfo, getAttendanceTip } from '../../services/weatherAdapter';
+import { getWeatherInfo, getAttendanceTip } from './weatherAdapter';
 
 
 const WeatherWidget = () => {

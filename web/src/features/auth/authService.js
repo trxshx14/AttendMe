@@ -1,4 +1,4 @@
-import api from './api';
+import api from '../../shared/api';
 
 export const authService = {
   async login(email, password) {
