@@ -1,8 +1,7 @@
-package edu.cit.cararag.attendme.features
+package edu.cit.cararag.attendme.features.attendance
 
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Locale
 
 interface DateRangeStrategy {
     fun getRange(): Pair<String, String>

@@ -1,4 +1,4 @@
-package edu.cit.cararag.attendme.features
+package edu.cit.cararag.attendme.features.user
 
 import android.app.AlertDialog
 import android.content.Intent
@@ -26,7 +26,6 @@ import de.hdodenhof.circleimageview.CircleImageView
 import edu.cit.cararag.attendme.R
 import edu.cit.cararag.attendme.shared.model.User
 import edu.cit.cararag.attendme.shared.network.RetrofitClient
-import edu.cit.cararag.attendme.features.UserRepository
 import edu.cit.cararag.attendme.shared.utils.SessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

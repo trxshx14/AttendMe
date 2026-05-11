@@ -1,4 +1,4 @@
-package edu.cit.cararag.attendme.features
+package edu.cit.cararag.attendme.features.user
 
 import android.app.Activity
 import android.content.Intent

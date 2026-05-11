@@ -1,4 +1,4 @@
-package edu.cit.cararag.attendme.features
+package edu.cit.cararag.attendme.features.user
 
 import edu.cit.cararag.attendme.shared.model.User
 import edu.cit.cararag.attendme.shared.network.RetrofitClient

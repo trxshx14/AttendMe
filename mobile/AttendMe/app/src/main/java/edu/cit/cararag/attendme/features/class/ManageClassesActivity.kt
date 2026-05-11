@@ -18,8 +18,7 @@ import com.google.gson.Gson
 import edu.cit.cararag.attendme.R
 import edu.cit.cararag.attendme.shared.model.SchoolClass
 import edu.cit.cararag.attendme.shared.model.User
-import edu.cit.cararag.attendme.features.ClassRepository
-import edu.cit.cararag.attendme.features.UserRepository
+import edu.cit.cararag.attendme.features.user.UserRepository
 import edu.cit.cararag.attendme.shared.utils.SessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

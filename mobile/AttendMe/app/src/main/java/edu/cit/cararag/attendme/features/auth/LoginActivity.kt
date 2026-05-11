@@ -18,8 +18,8 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import edu.cit.cararag.attendme.R
 import edu.cit.cararag.attendme.shared.network.RetrofitClient
-import edu.cit.cararag.attendme.features.AdminDashboardActivity
-import edu.cit.cararag.attendme.features.TeacherDashboardActivity
+import edu.cit.cararag.attendme.features.dashboard.AdminDashboardActivity
+import edu.cit.cararag.attendme.features.dashboard.TeacherDashboardActivity
 import edu.cit.cararag.attendme.shared.utils.SessionManager
 import kotlinx.coroutines.launch
 

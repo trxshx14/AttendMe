@@ -1,4 +1,4 @@
-package edu.cit.cararag.attendme.features
+package edu.cit.cararag.attendme.features.attendance
 
 import edu.cit.cararag.attendme.shared.model.Attendance
 import edu.cit.cararag.attendme.shared.model.AttendanceRequest

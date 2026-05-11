@@ -1,16 +1,20 @@
-package edu.cit.cararag.attendme.features
+package edu.cit.cararag.attendme.features.dashboard
 
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import edu.cit.cararag.attendme.R
+import edu.cit.cararag.attendme.features.report.AdminReportsActivity
 import edu.cit.cararag.attendme.shared.network.RetrofitClient
 import edu.cit.cararag.attendme.features.ClassRepository
-import edu.cit.cararag.attendme.features.UserRepository
+import edu.cit.cararag.attendme.features.ManageClassesActivity
+import edu.cit.cararag.attendme.features.user.ManageUsersActivity
+import edu.cit.cararag.attendme.features.user.UserRepository
 import edu.cit.cararag.attendme.features.auth.LoginActivity
 import edu.cit.cararag.attendme.shared.utils.SessionManager
 import kotlinx.coroutines.Dispatchers
@@ -49,21 +53,28 @@ class AdminDashboardActivity : AppCompatActivity() {
             startActivity(Intent(this, AdminReportsActivity::class.java))
         }
 
-        // ✅ Updated logout — calls backend first to mark user offline
         findViewById<Button>(R.id.btnLogout).setOnClickListener {
-            logoutAndRedirect()
+            showLogoutConfirmation()
         }
 
         loadDashboardData()
     }
 
-    // ✅ New logout helper — marks user offline on server before clearing session
+    private fun showLogoutConfirmation() {
+        AlertDialog.Builder(this)
+            .setTitle("Sign Out")
+            .setMessage("Are you sure you want to sign out?")
+            .setPositiveButton("Sign Out") { _, _ -> logoutAndRedirect() }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
     private fun logoutAndRedirect() {
         val token = sessionManager.getAccessToken() ?: ""
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val req = Request.Builder()
-                    .url("http://10.0.2.2:8888/api/auth/logout")
+                    .url("${RetrofitClient.BASE_URL_RAW}/api/auth/logout")
                     .header("Authorization", "Bearer $token")
                     .post(okhttp3.RequestBody.create(null, ByteArray(0)))
                     .build()
@@ -89,7 +100,7 @@ class AdminDashboardActivity : AppCompatActivity() {
             try {
                 // Fetch teachers
                 val teachersReq = Request.Builder()
-                    .url("http://10.0.2.2:8888/api/users/role/TEACHER")
+                    .url("${RetrofitClient.BASE_URL_RAW}/api/users/role/TEACHER")
                     .header("Authorization", "Bearer $token").get().build()
                 val teachersBody = httpClient.newCall(teachersReq).execute().body?.string() ?: ""
                 val teachersJson = gson.fromJson(teachersBody, com.google.gson.JsonObject::class.java)
@@ -97,7 +108,7 @@ class AdminDashboardActivity : AppCompatActivity() {
 
                 // Fetch students
                 val studentsReq = Request.Builder()
-                    .url("http://10.0.2.2:8888/api/students")
+                    .url("${RetrofitClient.BASE_URL_RAW}/api/students")
                     .header("Authorization", "Bearer $token").get().build()
                 val studentsBody = httpClient.newCall(studentsReq).execute().body?.string() ?: ""
                 val studentsJson = gson.fromJson(studentsBody, com.google.gson.JsonObject::class.java)
@@ -105,7 +116,7 @@ class AdminDashboardActivity : AppCompatActivity() {
 
                 // Fetch classes
                 val classesReq = Request.Builder()
-                    .url("http://10.0.2.2:8888/api/classes")
+                    .url("${RetrofitClient.BASE_URL_RAW}/api/classes")
                     .header("Authorization", "Bearer $token").get().build()
                 val classesBody = httpClient.newCall(classesReq).execute().body?.string() ?: ""
                 val classesJson = gson.fromJson(classesBody, com.google.gson.JsonObject::class.java)

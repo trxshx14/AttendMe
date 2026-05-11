@@ -1,4 +1,4 @@
-package edu.cit.cararag.attendme.features
+package edu.cit.cararag.attendme.features.dashboard
 
 import android.content.Intent
 import android.graphics.Color
@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -13,8 +14,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import com.google.gson.Gson
 import edu.cit.cararag.attendme.R
+import edu.cit.cararag.attendme.features.attendance.AttendanceHistoryActivity
+import edu.cit.cararag.attendme.features.attendance.TakeAttendanceActivity
+import edu.cit.cararag.attendme.features.attendance.TeacherClassAdapter
+import edu.cit.cararag.attendme.features.attendance.TeacherClassItem
+import edu.cit.cararag.attendme.features.report.TeacherReportsActivity
 import edu.cit.cararag.attendme.shared.model.SchoolClass
 import edu.cit.cararag.attendme.features.auth.LoginActivity
+import edu.cit.cararag.attendme.shared.network.RetrofitClient
 import edu.cit.cararag.attendme.shared.utils.SessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -59,7 +66,7 @@ class TeacherDashboardActivity : AppCompatActivity() {
 
         sessionManager = SessionManager(this)
 
-        // ✅ Guard: if not logged in, go back to login
+        // Guard: if not logged in, go back to login
         val rawToken = sessionManager.getAccessToken()
         if (rawToken.isNullOrBlank()) {
             android.util.Log.e("Dashboard", "No token found — redirecting to login")
@@ -71,7 +78,7 @@ class TeacherDashboardActivity : AppCompatActivity() {
         }
         token = rawToken
 
-        // ✅ Guard: if userId is invalid, go back to login
+        // Guard: if userId is invalid, go back to login
         val teacherId = sessionManager.getUserId()
         if (teacherId == -1L) {
             android.util.Log.e("Dashboard", "Invalid userId (-1) — redirecting to login")
@@ -130,11 +137,10 @@ class TeacherDashboardActivity : AppCompatActivity() {
         findViewById<MaterialButton>(R.id.btnTakeAttendanceNext).setOnClickListener {
             startActivity(Intent(this, TakeAttendanceActivity::class.java))
         }
+
+        // Logout with confirmation
         findViewById<MaterialButton>(R.id.btnLogout).setOnClickListener {
-            sessionManager.clearSession()
-            startActivity(Intent(this, LoginActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            })
+            showLogoutConfirmation()
         }
 
         // Weather buttons
@@ -145,14 +151,28 @@ class TeacherDashboardActivity : AppCompatActivity() {
         loadWeather()
     }
 
+    private fun showLogoutConfirmation() {
+        AlertDialog.Builder(this)
+            .setTitle("Sign Out")
+            .setMessage("Are you sure you want to sign out?")
+            .setPositiveButton("Sign Out") { _, _ ->
+                sessionManager.clearSession()
+                startActivity(Intent(this, LoginActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                })
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
     /* ── Dashboard Data ──────────────────────────────── */
     private fun loadDashboard() {
         val teacherId = sessionManager.getUserId()
         val today     = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-        val baseUrl   = "http://10.0.2.2:8888"
+        val baseUrl   = RetrofitClient.BASE_URL_RAW
 
         lifecycleScope.launch {
-            // ── Step 1: Fetch classes ──────────────────
+            // Step 1: Fetch classes
             val classResult = withContext(Dispatchers.IO) {
                 try {
                     val req = Request.Builder()
@@ -160,9 +180,9 @@ class TeacherDashboardActivity : AppCompatActivity() {
                         .header("Authorization", "Bearer $token")
                         .get().build()
 
-                    val response = httpClient.newCall(req).execute()
+                    val response   = httpClient.newCall(req).execute()
                     val statusCode = response.code
-                    val body = response.body?.string() ?: ""
+                    val body       = response.body?.string() ?: ""
 
                     android.util.Log.d("Dashboard", "Classes HTTP: $statusCode")
                     android.util.Log.d("Dashboard", "Classes body: $body")
@@ -194,7 +214,7 @@ class TeacherDashboardActivity : AppCompatActivity() {
                 }
             }
 
-            // ── Step 2: Fetch attendance for each class (single pass) ──
+            // Step 2: Fetch attendance for each class
             var sumPresent = 0
             var sumAbsent  = 0
             var sumLate    = 0
@@ -210,7 +230,7 @@ class TeacherDashboardActivity : AppCompatActivity() {
                             .get().build()
 
                         val response = httpClient.newCall(req).execute()
-                        val body = response.body?.string() ?: ""
+                        val body     = response.body?.string() ?: ""
 
                         android.util.Log.d("Dashboard", "Attendance [${cls.classId}] HTTP: ${response.code}")
                         android.util.Log.d("Dashboard", "Attendance [${cls.classId}] body: $body")
@@ -230,7 +250,6 @@ class TeacherDashboardActivity : AppCompatActivity() {
                             }
                         }
 
-                        // Thread-safe accumulation
                         synchronized(lock) {
                             sumPresent += present
                             sumAbsent  += absent
@@ -251,13 +270,11 @@ class TeacherDashboardActivity : AppCompatActivity() {
 
             val totalStudents = classResult.sumOf { it.studentCount ?: 0 }
 
-            // ── Step 3: Update UI ──────────────────────
+            // Step 3: Update UI
             withContext(Dispatchers.Main) {
-                // Hero mini-stats
                 findViewById<TextView>(R.id.tvMiniStudents).text = totalStudents.toString()
                 findViewById<TextView>(R.id.tvMiniClasses).text  = classResult.size.toString()
 
-                // Stat cards
                 findViewById<TextView>(R.id.tvStatClasses).text  = classResult.size.toString()
                 findViewById<TextView>(R.id.tvStatStudents).text = totalStudents.toString()
                 findViewById<TextView>(R.id.tvStatPresent).text  = sumPresent.toString()
@@ -265,7 +282,6 @@ class TeacherDashboardActivity : AppCompatActivity() {
                 findViewById<TextView>(R.id.tvStatLate).text     = sumLate.toString()
                 findViewById<TextView>(R.id.tvStatExcused).text  = sumExcused.toString()
 
-                // Today's summary card
                 findViewById<TextView>(R.id.tvSummaryPresent).text = sumPresent.toString()
                 findViewById<TextView>(R.id.tvSummaryAbsent).text  = sumAbsent.toString()
                 findViewById<TextView>(R.id.tvSummaryLate).text    = sumLate.toString()
@@ -273,7 +289,6 @@ class TeacherDashboardActivity : AppCompatActivity() {
                 val totalMarked = sumPresent + sumAbsent + sumLate + sumExcused
                 findViewById<TextView>(R.id.tvSummaryTotal).text = totalMarked.toString()
 
-                // Classes RecyclerView
                 if (classItems.isEmpty()) {
                     findViewById<LinearLayout>(R.id.layoutNoClasses).visibility = View.VISIBLE
                     findViewById<RecyclerView>(R.id.rvMyClasses).visibility     = View.GONE
@@ -299,7 +314,6 @@ class TeacherDashboardActivity : AppCompatActivity() {
                 val lat = 10.3157
                 val lon = 123.8854
 
-                // Reverse geocode
                 val geoReq = Request.Builder()
                     .url("https://nominatim.openstreetmap.org/reverse?lat=$lat&lon=$lon&format=json")
                     .header("User-Agent", "AttendMe/1.0")
@@ -313,7 +327,6 @@ class TeacherDashboardActivity : AppCompatActivity() {
                     ?: address?.optString("municipality")?.takeIf { it.isNotBlank() }
                     ?: "Cebu City"
 
-                // Fetch weather
                 val weatherReq = Request.Builder()
                     .url(
                         "https://api.open-meteo.com/v1/forecast" +
@@ -334,8 +347,8 @@ class TeacherDashboardActivity : AppCompatActivity() {
                 val isDay     = current.getInt("is_day")
 
                 val (emoji, condition) = getWeatherInfo(code, isDay)
-                val tip      = getAttendanceTip(code, temp)
-                val updated  = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
+                val tip     = getAttendanceTip(code, temp)
+                val updated = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
 
                 withContext(Dispatchers.Main) {
                     layoutWeatherLoading.visibility = View.GONE
@@ -484,9 +497,9 @@ class TeacherDashboardActivity : AppCompatActivity() {
         if (time.isBlank()) return ""
         return try {
             val parts = time.split(":")
-            val h = parts[0].toInt()
-            val m = parts.getOrNull(1)?.toInt() ?: 0
-            val ampm = if (h >= 12) "PM" else "AM"
+            val h     = parts[0].toInt()
+            val m     = parts.getOrNull(1)?.toInt() ?: 0
+            val ampm  = if (h >= 12) "PM" else "AM"
             "${if (h % 12 == 0) 12 else h % 12}:${String.format("%02d", m)} $ampm"
         } catch (e: Exception) { time }
     }

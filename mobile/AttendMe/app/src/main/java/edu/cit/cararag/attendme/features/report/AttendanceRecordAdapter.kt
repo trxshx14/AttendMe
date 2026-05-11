@@ -1,4 +1,4 @@
-package edu.cit.cararag.attendme.features
+package edu.cit.cararag.attendme.features.report
 
 import android.graphics.Color
 import android.view.LayoutInflater
