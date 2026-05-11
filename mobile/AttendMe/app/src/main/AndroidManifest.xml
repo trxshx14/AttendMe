@@ -12,10 +12,12 @@
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
         android:theme="@style/Theme.AttendMe"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         tools:targetApi="31">
 
         <activity
-            android:name=".ui.login.LoginActivity"
+            android:name=".features.auth.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -24,31 +26,29 @@
         </activity>
 
         <activity
-            android:name=".ui.teacher.TeacherDashboardActivity"
+            android:name=".features.dashboard.TeacherDashboardActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.teacher.TakeAttendanceActivity"
+            android:name=".features.attendance.TakeAttendanceActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.teacher.AttendanceHistoryActivity"
+            android:name=".features.attendance.AttendanceHistoryActivity"
             android:exported="false" />
 
         <activity
-            android:name=".ui.teacher.TeacherReportsActivity"
+            android:name=".features.report.TeacherReportsActivity"
             android:exported="false"
             android:label="Teacher Reports" />
 
+        <activity android:name=".features.dashboard.AdminDashboardActivity" android:exported="false" />
         <activity
-            android:name=".ui.admin.AdminDashboardActivity"
+            android:name=".features.user.ManageUsersActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.admin.ManageUsersActivity"
+            android:name=".features.ManageClassesActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.admin.ManageClassesActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.admin.AdminReportsActivity"
+            android:name=".features.report.AdminReportsActivity"
             android:exported="false" />
 
         <activity

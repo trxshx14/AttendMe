@@ -1,4 +1,4 @@
-package edu.cit.cararag.attendme.features
+package edu.cit.cararag.attendme.features.attendance
 
 import android.app.DatePickerDialog
 import android.os.Bundle
@@ -15,6 +15,7 @@ import com.google.android.material.button.MaterialButton
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import edu.cit.cararag.attendme.R
+import edu.cit.cararag.attendme.features.StudentAttendanceAdapter
 import edu.cit.cararag.attendme.shared.model.SchoolClass
 import edu.cit.cararag.attendme.shared.model.Student
 import edu.cit.cararag.attendme.shared.utils.SessionManager

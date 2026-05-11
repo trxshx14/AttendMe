@@ -1,11 +1,10 @@
-package edu.cit.cararag.attendme.features
+package edu.cit.cararag.attendme.features.attendance
 
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.LayoutInflater
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity

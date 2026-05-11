@@ -1,4 +1,4 @@
-package edu.cit.cararag.attendme.features
+package edu.cit.cararag.attendme.features.user
 
 import android.view.LayoutInflater
 import android.view.View

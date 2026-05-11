@@ -23,24 +23,24 @@
 
             <FrameLayout
                 android:layout_width="72dp"
-                android:layout_height="72dp"
-                android:layout_marginBottom="16dp"
-                android:layout_gravity="center">
+                android:layout_height="56dp"
+                android:layout_gravity="center"
+                android:layout_marginBottom="16dp">
 
                 <!-- Circle background -->
                 <View
                     android:layout_width="72dp"
                     android:layout_height="72dp"
-                    android:background="@drawable/bg_circle_navy"/>
+                    android:background="@drawable/bg_circle_navy" />
 
                 <!-- Logo centered on top -->
                 <ImageView
                     android:layout_width="44dp"
                     android:layout_height="44dp"
                     android:layout_gravity="center"
-                    android:src="@drawable/dashboardlogo"
+                    android:contentDescription="AttendMe Logo"
                     android:scaleType="fitCenter"
-                    android:contentDescription="AttendMe Logo"/>
+                    android:src="@drawable/dashboardlogo" />
 
             </FrameLayout>
 

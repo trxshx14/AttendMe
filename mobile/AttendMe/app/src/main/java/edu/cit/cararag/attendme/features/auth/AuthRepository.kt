@@ -1,4 +1,4 @@
-package edu.cit.cararag.attendme.features
+package edu.cit.cararag.attendme.features.auth
 
 import edu.cit.cararag.attendme.shared.model.GoogleLoginRequest
 import edu.cit.cararag.attendme.shared.model.LoginRequest

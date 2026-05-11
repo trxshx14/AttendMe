@@ -5,7 +5,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import edu.cit.cararag.attendme.shared.model.JwtData
-import edu.cit.cararag.attendme.features.AuthRepository
 import kotlinx.coroutines.launch
 
 class LoginViewModel : ViewModel() {
