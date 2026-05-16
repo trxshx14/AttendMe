@@ -7,7 +7,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 60000, // 60 seconds to allow backend to wake up
 });
 
 // Request interceptor - ALWAYS runs before every request
