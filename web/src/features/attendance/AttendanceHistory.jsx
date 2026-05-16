@@ -145,7 +145,7 @@ const AttendanceHistory = () => {
     setClassLoading(true);
     try {
       const teacherId = user.userId || user.id;
-      const res  = await fetch(`http://localhost:8888/api/classes/teacher/${teacherId}`, {
+      const res  = await fetch(`${process.env.REACT_APP_API_BASE}/api/classes/teacher/${teacherId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -190,7 +190,7 @@ const AttendanceHistory = () => {
 
       const fetches = classesToQuery.flatMap(cls =>
         dates.map(date =>
-          fetch(`http://localhost:8888/api/attendance/class/${cls.classId}/date/${date}`, {
+          fetch(`${process.env.REACT_APP_API_BASE}/api/attendance/class/${cls.classId}/date/${date}`, {
             headers: { Authorization: `Bearer ${token}` },
           })
           .then(r => r.json())
@@ -249,7 +249,7 @@ const AttendanceHistory = () => {
     if (!editRecord) return;
     setEditSaving(true);
     try {
-      const res  = await fetch(`http://localhost:8888/api/attendance/${editRecord.attendanceId}`, {
+      const res  = await fetch(`${process.env.REACT_APP_API_BASE}/api/attendance/${editRecord.attendanceId}`, {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -275,7 +275,7 @@ const AttendanceHistory = () => {
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
-      const res  = await fetch(`http://localhost:8888/api/attendance/${deleteId}`, {
+      const res  = await fetch(`${process.env.REACT_APP_API_BASE}/api/attendance/${deleteId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });

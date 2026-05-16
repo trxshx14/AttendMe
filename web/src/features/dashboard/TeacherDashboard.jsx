@@ -70,7 +70,7 @@ const TeacherDashboard = () => {
       const teacherId = user.userId || user.id;
 
       const classesRes  = await fetch(
-        `http://localhost:8888/api/classes/teacher/${teacherId}`,
+        `${process.env.REACT_APP_API_BASE}/api/classes/teacher/${teacherId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const classesData = await classesRes.json();
@@ -83,7 +83,7 @@ const TeacherDashboard = () => {
       const classDetails = await Promise.all(classes.map(async (cls) => {
         try {
           const res  = await fetch(
-            `http://localhost:8888/api/attendance/class/${cls.classId}/date/${today}`,
+            `${process.env.REACT_APP_API_BASE}/api/attendance/class/${cls.classId}/date/${today}`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
           const data = await res.json();

@@ -144,7 +144,7 @@ const TeacherReports = () => {
   const fetchClasses = async () => {
     setClassLoading(true);
     try {
-      const res  = await fetch(`http://localhost:8888/api/classes/teacher/${teacherId}`, {
+      const res  = await fetch(`${process.env.REACT_APP_API_BASE}/api/classes/teacher/${teacherId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -173,7 +173,7 @@ const TeacherReports = () => {
       // Fetch attendance for every class × every date in parallel
       const fetches = classesToQuery.flatMap(cls =>
         dates.map(date =>
-          fetch(`http://localhost:8888/api/attendance/class/${cls.classId}/date/${date}`, {
+          fetch(`${process.env.REACT_APP_API_BASE}/api/attendance/class/${cls.classId}/date/${date}`, {
             headers: { Authorization: `Bearer ${token}` },
           })
           .then(r => r.json())
