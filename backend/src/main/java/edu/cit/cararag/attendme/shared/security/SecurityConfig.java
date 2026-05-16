@@ -37,14 +37,15 @@ public class SecurityConfig {
         return authConfig.getAuthenticationManager();
     }
 
-    @Bean
+@Bean
 public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
     configuration.setAllowedOrigins(Arrays.asList(
-        "http://localhost:3000",      // Web app
-        "${process.env.REACT_APP_API_BASE}",      // Local backend
-        "http://10.0.2.2:8888",       // Android emulator → your machine
-        "http://10.0.2.2:3000"        // Android emulator → web
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "https://attendme-frontend.onrender.com",
+        "http://10.0.2.2:8888",
+        "http://10.0.2.2:3000"
     ));
     configuration.setAllowedMethods(Arrays.asList(
         "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
