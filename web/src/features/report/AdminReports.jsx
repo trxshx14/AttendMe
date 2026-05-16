@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import './AdminReports.css';
 
-const API_BASE = import.meta.env.VITE_API_BASE;
+const API_BASE = process.env.REACT_APP_API_BASE;
 
 const AdminReports = () => {
   const [classes, setClasses]                     = useState([]);
