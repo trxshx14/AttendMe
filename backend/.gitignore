@@ -40,4 +40,4 @@ mobile/.gradle/
 mobile/build/
 mobile/app/build/
 mobile/local.properties
-mobile/.idea/
+mobile/.idea/"src/main/resources/application-local.properties" 
