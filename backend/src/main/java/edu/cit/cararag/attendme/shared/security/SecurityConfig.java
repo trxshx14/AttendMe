@@ -42,7 +42,7 @@ public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
     configuration.setAllowedOrigins(Arrays.asList(
         "http://localhost:3000",      // Web app
-        "http://localhost:8888",      // Local backend
+        "${process.env.REACT_APP_API_BASE}",      // Local backend
         "http://10.0.2.2:8888",       // Android emulator → your machine
         "http://10.0.2.2:3000"        // Android emulator → web
     ));
