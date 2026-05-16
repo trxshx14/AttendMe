@@ -465,7 +465,7 @@ const ManageClasses = () => {
         <div className="modal-overlay" onClick={() => setShowStudentsModal(false)}>
           <div className="modal modal-lg" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Students in {selectedClass.className}</h3>
+              <h3>Students in {selectedClass.className}{selectedClass.section ? ` - ${selectedClass.section}` : ''}</h3>
               <button className="modal-close" onClick={() => setShowStudentsModal(false)}><X size={16} /></button>
             </div>
             <div className="modal-body">

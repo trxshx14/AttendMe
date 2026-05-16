@@ -5,6 +5,8 @@ import {
 } from 'lucide-react';
 import './AdminReports.css';
 
+const API_BASE = 'http://192.168.1.10:8888';
+
 const AdminReports = () => {
   const [classes, setClasses]                     = useState([]);
   const [selectedClass, setSelectedClass]         = useState('');
@@ -17,8 +19,11 @@ const AdminReports = () => {
   const [loading, setLoading]                     = useState(true);
   const [reportLoading, setReportLoading]         = useState(false);
   const [error, setError]                         = useState('');
-  const [viewMode, setViewMode]                   = useState('daily'); // 'daily' | 'weekly'
+  const [viewMode, setViewMode]                   = useState('daily');
   const [reportGenerated, setReportGenerated]     = useState(false);
+
+  // Store the daily report date separately so the table always shows the correct date
+  const [dailyReportDate, setDailyReportDate]     = useState('');
 
   useEffect(() => { fetchClasses(); }, []);
 
@@ -27,7 +32,7 @@ const AdminReports = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const res   = await fetch('http://localhost:8888/api/classes', {
+      const res   = await fetch(`${API_BASE}/api/classes`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       const data = await res.json();
@@ -52,25 +57,43 @@ const AdminReports = () => {
       let records = [];
 
       if (viewMode === 'daily') {
-        // Daily — use existing /report/{date} endpoint
-        const url  = `http://localhost:8888/api/attendance/class/${selectedClass}/report/${dateRange.startDate}`;
+        // Returns: ApiResponse<DailyReportResponse>
+        // DailyReportResponse.attendanceList → List<StudentAttendanceResponse>
+        // StudentAttendanceResponse fields: studentId, rollNumber, studentName, status, remarks
+        // NOTE: StudentAttendanceResponse has NO date field — we use dateRange.startDate for display
+        const url  = `${API_BASE}/api/attendance/class/${selectedClass}/report/${dateRange.startDate}`;
         const res  = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
         const data = await res.json();
 
         if (data.success) {
-          records = data.data?.attendanceList || [];
+          const reportData = data.data; // DailyReportResponse object
+          records = (reportData?.attendanceList || []).map(r => ({
+            // StudentAttendanceResponse fields
+            studentId:   r.studentId,
+            studentName: r.studentName,
+            rollNumber:  r.rollNumber,
+            status:      r.status,
+            remarks:     r.remarks,
+            // Inject the report date since StudentAttendanceResponse has no date field
+            date:        dateRange.startDate,
+          }));
+          setDailyReportDate(dateRange.startDate);
         } else {
           setError(data.message || 'Failed to generate report');
           return;
         }
 
       } else {
-        // Weekly — use new /range endpoint
-        const url  = `http://localhost:8888/api/attendance/class/${selectedClass}/range?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`;
+        // Returns: ApiResponse<List<AttendanceResponse>>
+        // AttendanceResponse fields: attendanceId, classId, className, studentId, studentName,
+        //                            rollNumber, date (LocalDate → "yyyy-MM-dd"), status, remarks,
+        //                            markedBy, createdAt, updatedAt
+        const url  = `${API_BASE}/api/attendance/class/${selectedClass}/range?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`;
         const res  = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
         const data = await res.json();
 
         if (data.success) {
+          // data.data is directly the array of AttendanceResponse
           records = data.data || [];
         } else {
           setError(data.message || 'Failed to generate report');
@@ -82,7 +105,8 @@ const AdminReports = () => {
       computeSummary(records);
       setReportGenerated(true);
 
-    } catch {
+    } catch (err) {
+      console.error('Report generation error:', err);
       setError('Failed to generate report');
     } finally {
       setReportLoading(false);
@@ -110,7 +134,7 @@ const AdminReports = () => {
     if (!attendanceRecords.length) return;
     const header = 'Date,Student Name,Roll Number,Status,Remarks\n';
     const rows   = attendanceRecords.map(r =>
-      `${r.date || dateRange.startDate},${r.studentName},${r.rollNumber || ''},${r.status},${r.remarks || ''}`
+      `${r.date || dailyReportDate},${r.studentName},${r.rollNumber || ''},${r.status},${r.remarks || ''}`
     ).join('\n');
     const blob = new Blob([header + rows], { type: 'text/csv' });
     const url  = window.URL.createObjectURL(blob);
@@ -121,6 +145,7 @@ const AdminReports = () => {
     window.URL.revokeObjectURL(url);
   };
 
+  /* ── Helpers ─────────────────────────────────────────── */
   const getStatusColor = (s) => ({
     present: '#10b981', absent: '#ef4444', late: '#f59e0b', excused: '#8b5cf6'
   }[s?.toLowerCase()] || '#64748b');
@@ -128,6 +153,15 @@ const AdminReports = () => {
   const getStatusBg = (s) => ({
     present: '#d1fae5', absent: '#fee2e2', late: '#fef3c7', excused: '#ede9fe'
   }[s?.toLowerCase()] || '#f1f5f9');
+
+  // Safely format a date string (handles both "yyyy-MM-dd" from LocalDate and undefined)
+  const formatDate = (dateStr, fallback = '') => {
+    const d = dateStr || fallback;
+    if (!d) return '—';
+    return new Date(d + 'T00:00:00').toLocaleDateString('en-PH', {
+      month: 'short', day: 'numeric', year: 'numeric',
+    });
+  };
 
   if (loading) return <div className="ar-loading">Loading reports...</div>;
 
@@ -160,6 +194,7 @@ const AdminReports = () => {
       <div className="filters-section">
         <div className="filter-group">
           <label className="filter-label">Select Class</label>
+          {/* SchoolClassResponse fields: classId, className, section */}
           <select className="filter-select" value={selectedClass} onChange={e => setSelectedClass(e.target.value)}>
             <option value="">Choose a class</option>
             {classes.map(cls => (
@@ -258,8 +293,8 @@ const AdminReports = () => {
             {viewMode === 'daily' ? 'Daily Attendance Report' : 'Weekly Attendance Report'}
             <span className="report-date-range">
               {viewMode === 'daily'
-                ? new Date(dateRange.startDate + 'T00:00:00').toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' })
-                : `${new Date(dateRange.startDate + 'T00:00:00').toLocaleDateString()} – ${new Date(dateRange.endDate + 'T00:00:00').toLocaleDateString()}`
+                ? formatDate(dailyReportDate)
+                : `${formatDate(dateRange.startDate)} – ${formatDate(dateRange.endDate)}`
               }
             </span>
           </h3>
@@ -278,9 +313,9 @@ const AdminReports = () => {
                 {attendanceRecords.map((record, i) => (
                   <tr key={i}>
                     <td>
-                      {new Date((record.date || dateRange.startDate) + 'T00:00:00').toLocaleDateString('en-PH', {
-                        month: 'short', day: 'numeric', year: 'numeric'
-                      })}
+                      {/* Daily: record.date was injected as dateRange.startDate during mapping  */}
+                      {/* Weekly: record.date comes from AttendanceResponse (LocalDate → "yyyy-MM-dd") */}
+                      {formatDate(record.date, dailyReportDate)}
                     </td>
                     <td className="student-cell">
                       <div className="student-avatar-small">
