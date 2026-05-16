@@ -45,9 +45,9 @@ const AdminDashboard = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const [teachersRes, studentsRes, classesRes] = await Promise.all([
-        fetch('${process.env.REACT_APP_API_BASE}/api/users/role/TEACHER', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('${process.env.REACT_APP_API_BASE}/api/students', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('${process.env.REACT_APP_API_BASE}/api/classes', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch(`${process.env.REACT_APP_API_BASE}/api/users/role/TEACHER`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`${process.env.REACT_APP_API_BASE}/api/students`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`${process.env.REACT_APP_API_BASE}/api/classes`, { headers: { 'Authorization': `Bearer ${token}` } })
       ]);
 
       const teachersData = await teachersRes.json();
