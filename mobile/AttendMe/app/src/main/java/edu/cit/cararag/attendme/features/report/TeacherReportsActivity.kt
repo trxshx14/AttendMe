@@ -1,7 +1,13 @@
 package edu.cit.cararag.attendme.features.report
 
 import android.app.DatePickerDialog
+import android.content.ContentValues
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -30,6 +36,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.io.File
+import java.io.FileWriter
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -48,6 +56,7 @@ class TeacherReportsActivity : AppCompatActivity() {
     private lateinit var etCustomTo: EditText
     private lateinit var tvDateRangePreview: TextView
     private lateinit var btnGenerate: MaterialButton
+    private lateinit var btnExportCsv: MaterialButton
     private lateinit var progressBar: ProgressBar
     private lateinit var tvError: TextView
     private lateinit var layoutPlaceholder: LinearLayout
@@ -68,6 +77,12 @@ class TeacherReportsActivity : AppCompatActivity() {
 
     private var classes = listOf<SchoolClass>()
     private lateinit var breakdownAdapter: StudentBreakdownAdapter
+
+    // Store last generated report data for CSV export
+    private var lastReportRows = listOf<StudentReportRow>()
+    private var lastReportFrom = ""
+    private var lastReportTo   = ""
+    private var lastReportClass = "All Classes"
 
     private val periodOptions = listOf(
         "This Week", "Last Week", "Last 2 Weeks", "This Month", "Custom Range"
@@ -92,6 +107,7 @@ class TeacherReportsActivity : AppCompatActivity() {
         etCustomTo         = findViewById(R.id.etCustomTo)
         tvDateRangePreview = findViewById(R.id.tvDateRangePreview)
         btnGenerate        = findViewById(R.id.btnGenerate)
+        btnExportCsv       = findViewById(R.id.btnExportCsv)
         progressBar        = findViewById(R.id.progressBar)
         tvError            = findViewById(R.id.tvError)
         layoutPlaceholder  = findViewById(R.id.layoutPlaceholder)
@@ -132,6 +148,9 @@ class TeacherReportsActivity : AppCompatActivity() {
 
         // Generate
         btnGenerate.setOnClickListener { generateReport() }
+
+        // Export CSV
+        btnExportCsv.setOnClickListener { exportCsv() }
 
         // Set default dates
         etCustomFrom.setText(sdf.format(Date(System.currentTimeMillis() - 7L * 24 * 60 * 60 * 1000)))
@@ -207,7 +226,6 @@ class TeacherReportsActivity : AppCompatActivity() {
                                 val json = gson.fromJson(body, com.google.gson.JsonObject::class.java)
 
                                 if (json.get("success")?.asBoolean == true) {
-                                    // CHANGE 1: Update TypeToken to use StudentAttendance
                                     val type = object : TypeToken<List<StudentAttendance>>() {}.type
                                     gson.fromJson<List<StudentAttendance>>(json.get("data").asJsonArray, type)
                                         .map { it.copy(status = it.status.lowercase()) }
@@ -219,7 +237,6 @@ class TeacherReportsActivity : AppCompatActivity() {
 
                 val allRecords = fetches.flatten()
 
-                // Summary logic
                 var present = 0; var absent = 0; var late = 0; var excused = 0
                 allRecords.forEach {
                     when (it.status.lowercase()) {
@@ -232,7 +249,6 @@ class TeacherReportsActivity : AppCompatActivity() {
                 val total = allRecords.size
                 val avg   = if (total > 0) ((present + late) * 100 / total) else 0
 
-                // Per-student breakdown
                 val studentMap = mutableMapOf<Int, StudentReportRow>()
                 allRecords.forEach { r ->
                     val sid = r.studentId
@@ -241,21 +257,15 @@ class TeacherReportsActivity : AppCompatActivity() {
                     val fn = parts.dropLast(1).joinToString(" ").ifBlank { name }
                     val ln = if (parts.size > 1) parts.last() else ""
                     val existing = studentMap[sid] ?: StudentReportRow(
-                        sid.toLong(),
-                        fn,
-                        ln,
-                        r.rollNumber ?: "",
-                        r.className ?: "",
+                        sid.toLong(), fn, ln, r.rollNumber ?: "", r.className ?: "",
                         0, 0, 0, 0
                     )
-                    if (r != null) {
-                        studentMap[sid.toInt()] = when (r.status) {
-                            "present" -> existing.copy(present = existing.present + 1)
-                            "absent"  -> existing.copy(absent  = existing.absent  + 1)
-                            "late"    -> existing.copy(late    = existing.late    + 1)
-                            "excused" -> existing.copy(excused = existing.excused + 1)
-                            else      -> existing
-                        }
+                    studentMap[sid.toInt()] = when (r.status) {
+                        "present" -> existing.copy(present = existing.present + 1)
+                        "absent"  -> existing.copy(absent  = existing.absent  + 1)
+                        "late"    -> existing.copy(late    = existing.late    + 1)
+                        "excused" -> existing.copy(excused = existing.excused + 1)
+                        else      -> existing
                     }
                 }
                 val rows = studentMap.values
@@ -265,6 +275,12 @@ class TeacherReportsActivity : AppCompatActivity() {
                     showLoading(false)
                     layoutPlaceholder.visibility = View.GONE
                     layoutReport.visibility      = View.VISIBLE
+
+                    // Store for CSV export
+                    lastReportRows  = rows
+                    lastReportFrom  = from
+                    lastReportTo    = to
+                    lastReportClass = spinnerClass.selectedItem?.toString() ?: "All Classes"
 
                     // Summary cards
                     tvSumTotal.text   = total.toString()
@@ -278,7 +294,6 @@ class TeacherReportsActivity : AppCompatActivity() {
                     tvSumExcusedPct.text = "${if (total > 0) excused * 100 / total else 0}%"
                     tvAvgAttendance.text = "$avg%"
 
-                    // Rate bar
                     viewRateBar.post {
                         val parent = viewRateBar.parent as FrameLayout
                         val params = viewRateBar.layoutParams
@@ -286,7 +301,6 @@ class TeacherReportsActivity : AppCompatActivity() {
                         viewRateBar.layoutParams = params
                     }
 
-                    // Student breakdown
                     breakdownAdapter.updateData(rows)
                 }
             } catch (e: Exception) {
@@ -298,18 +312,101 @@ class TeacherReportsActivity : AppCompatActivity() {
         }
     }
 
-    private fun getDateRange():
-            Pair<String,String> {
+    // ─── CSV Export ──────────────────────────────────────────────────────────
+
+    private fun exportCsv() {
+        if (lastReportRows.isEmpty()) {
+            showError("Generate a report first before exporting.")
+            return
+        }
+
+        val fileName = "AttendMe_Report_${lastReportFrom}_${lastReportTo}.csv"
+        val csvContent = buildCsvContent()
+
+        try {
+            val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // Android 10+ — write to Downloads via MediaStore (no permission needed)
+                val values = ContentValues().apply {
+                    put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+                    put(MediaStore.Downloads.MIME_TYPE, "text/csv")
+                    put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+                }
+                val resolver = contentResolver
+                val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                uri?.let {
+                    resolver.openOutputStream(it)?.use { os -> os.write(csvContent.toByteArray()) }
+                }
+                uri
+            } else {
+                // Android 9 and below — write to Downloads folder directly
+                val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                val file = File(downloadsDir, fileName)
+                FileWriter(file).use { it.write(csvContent) }
+                Uri.fromFile(file)
+            }
+
+            if (uri != null) {
+                Toast.makeText(this, "✅ Saved to Downloads: $fileName", Toast.LENGTH_LONG).show()
+                // Open share sheet so user can open or share the file
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/csv"
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(Intent.createChooser(shareIntent, "Share CSV report"))
+            } else {
+                showError("Failed to save CSV file.")
+            }
+        } catch (e: Exception) {
+            showError("Export failed: ${e.message}")
+        }
+    }
+
+    private fun buildCsvContent(): String {
+        val sb = StringBuilder()
+
+        // Header info
+        sb.appendLine("AttendMe Attendance Report")
+        sb.appendLine("Class,$lastReportClass")
+        sb.appendLine("Period,$lastReportFrom to $lastReportTo")
+        sb.appendLine("Generated,${SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())}")
+        sb.appendLine()
+
+        // Summary row
+        val total   = tvSumTotal.text.toString()
+        val present = tvSumPresent.text.toString()
+        val absent  = tvSumAbsent.text.toString()
+        val late    = tvSumLate.text.toString()
+        val excused = tvSumExcused.text.toString()
+        val avg     = tvAvgAttendance.text.toString()
+        sb.appendLine("SUMMARY")
+        sb.appendLine("Total,Present,Absent,Late,Excused,Avg Attendance")
+        sb.appendLine("$total,$present,$absent,$late,$excused,$avg")
+        sb.appendLine()
+
+        // Student breakdown
+        sb.appendLine("STUDENT BREAKDOWN")
+        sb.appendLine("Student ID,First Name,Last Name,Class,Present,Absent,Late,Excused,Attendance %")
+        lastReportRows.forEach { row ->
+            val rowTotal = row.present + row.absent + row.late + row.excused
+            val pct = if (rowTotal > 0) "${(row.present + row.late) * 100 / rowTotal}%" else "0%"
+            sb.appendLine("${row.studentId},\"${row.firstName}\",\"${row.lastName}\",\"${row.className}\",${row.present},${row.absent},${row.late},${row.excused},$pct")
+        }
+
+        return sb.toString()
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private fun getDateRange(): Pair<String, String> {
         val strategy: DateRangeStrategy =
-            when(spinnerPeriod.selectedItemPosition){
+            when (spinnerPeriod.selectedItemPosition) {
                 0 -> ThisWeekStrategy(sdf)
                 1 -> LastWeekStrategy(sdf)
                 2 -> ThisMonthStrategy(sdf)
                 3 -> ThisMonthStrategy(sdf)
-                4 -> CustomRangeStrategy(
-                    etCustomFrom.text.toString(),
-                    etCustomTo.text.toString())
-                else -> CustomRangeStrategy("","")
+                4 -> CustomRangeStrategy(etCustomFrom.text.toString(), etCustomTo.text.toString())
+                else -> CustomRangeStrategy("", "")
             }
         return strategy.getRange()
     }

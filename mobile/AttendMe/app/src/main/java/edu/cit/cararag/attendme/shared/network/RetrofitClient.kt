@@ -10,7 +10,7 @@ object RetrofitClient {
 
     // ✅ Single source of truth for base URL
     // Change this IP if your PC's IP changes
-    const val BASE_URL_RAW = "http://192.168.1.9:8888"
+    const val BASE_URL_RAW = "http://10.0.2.2:8888"
     private const val BASE_URL = "$BASE_URL_RAW/api/"
 
     private var token: String? = null

@@ -39,7 +39,7 @@ class AdminReportsActivity : AppCompatActivity() {
     private lateinit var token: String
 
     // ── Use your PC's local IP so real device can reach backend ──
-    private val BASE_URL = "http://192.168.1.9:8888"
+    private val BASE_URL = "http://10.0.2.2:8888"
 
     private lateinit var btnDaily: MaterialButton
     private lateinit var btnWeekly: MaterialButton

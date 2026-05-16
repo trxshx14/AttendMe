@@ -276,7 +276,7 @@ class ManageClassesActivity : AppCompatActivity() {
                     "• ${it.fullName ?: "${it.firstName} ${it.lastName}"} (${it.rollNumber ?: "—"})"
                 }
                 AlertDialog.Builder(this@ManageClassesActivity)
-                    .setTitle("Students — ${cls.className}")
+                    .setTitle("Students — ${cls.className}${cls.section?.let { " - $it" } ?: ""}")
                     .setMessage(msg)
                     .setPositiveButton("Add Student") { _, _ -> showAddStudentDialog(cls) }
                     .setNegativeButton("Close", null)
