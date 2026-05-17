@@ -1,62 +1,62 @@
 package edu.cit.cararag.attendme.features.report;
 
-import edu.cit.cararag.attendme.features.report.EmailService;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
+import com.resend.Resend;
+import com.resend.core.exception.ResendException;
+import com.resend.services.emails.model.CreateEmailOptions;
+import com.resend.services.emails.model.CreateEmailResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
 
-    private final JavaMailSender mailSender;
+    private final Resend resend;
 
-    // ─── Email 1: Welcome (account-related) ──────────────────────────────────
+    public EmailServiceImpl(@Value("${resend.api.key}") String apiKey) {
+        this.resend = new Resend(apiKey);
+    }
+
+    // ─── Email 1: Welcome ────────────────────────────────────────────────────
 
     @Async
     @Override
     public void sendWelcomeEmail(String toEmail, String fullName, String username, String password) {
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            CreateEmailOptions params = CreateEmailOptions.builder()
+                    .from("AttendMe <onboarding@resend.dev>")
+                    .to(toEmail)
+                    .subject("Welcome to AttendMe – Your Account is Ready")
+                    .html(buildWelcomeEmailHtml(fullName, username, password))
+                    .build();
 
-            helper.setFrom("cararagtrisharaye@gmail.com");
-            helper.setTo(toEmail);
-            helper.setSubject("Welcome to AttendMe – Your Account is Ready");
-            helper.setText(buildWelcomeEmailHtml(fullName, username, password), true);
+            CreateEmailResponse response = resend.emails().send(params);
+            log.info("Welcome email sent to {} | id: {}", toEmail, response.getId());
 
-            mailSender.send(message);
-            log.info("Welcome email sent to {}", toEmail);
-
-        } catch (MessagingException e) {
+        } catch (ResendException e) {
             log.error("Failed to send welcome email to {}: {}", toEmail, e.getMessage());
         }
     }
 
-    // ─── Email 2: Password Updated (system notification) ─────────────────────
+    // ─── Email 2: Password Updated ───────────────────────────────────────────
 
     @Async
     @Override
     public void sendPasswordUpdatedEmail(String toEmail, String fullName, String username, String newPassword) {
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            CreateEmailOptions params = CreateEmailOptions.builder()
+                    .from("AttendMe <onboarding@resend.dev>")
+                    .to(toEmail)
+                    .subject("AttendMe – Your Password Has Been Updated")
+                    .html(buildPasswordUpdatedEmailHtml(fullName, username, newPassword))
+                    .build();
 
-            helper.setFrom("cararagtrisharaye@gmail.com");
-            helper.setTo(toEmail);
-            helper.setSubject("AttendMe – Your Password Has Been Updated");
-            helper.setText(buildPasswordUpdatedEmailHtml(fullName, username, newPassword), true);
+            CreateEmailResponse response = resend.emails().send(params);
+            log.info("Password updated email sent to {} | id: {}", toEmail, response.getId());
 
-            mailSender.send(message);
-            log.info("Password updated email sent to {}", toEmail);
-
-        } catch (MessagingException e) {
+        } catch (ResendException e) {
             log.error("Failed to send password updated email to {}: {}", toEmail, e.getMessage());
         }
     }
@@ -79,7 +79,6 @@ public class EmailServiceImpl implements EmailService {
                     <table width="600" cellpadding="0" cellspacing="0"
                            style="background-color:#ffffff;border-radius:16px;overflow:hidden;
                                   box-shadow:0 4px 20px rgba(0,0,0,0.08);">
-
                       <!-- Header -->
                       <tr>
                         <td style="background-color:#0F2D5E;padding:32px 40px;text-align:center;">
@@ -90,7 +89,6 @@ public class EmailServiceImpl implements EmailService {
                           </p>
                         </td>
                       </tr>
-
                       <!-- Body -->
                       <tr>
                         <td style="padding:40px;">
@@ -101,7 +99,6 @@ public class EmailServiceImpl implements EmailService {
                             Your account has been created by the system administrator in your school.
                             You can now log in to AttendMe using the credentials below.
                           </p>
-
                           <!-- Credentials Box -->
                           <table width="100%%" cellpadding="0" cellspacing="0"
                               style="background-color:#EBF2FF;border-radius:12px;
@@ -126,31 +123,9 @@ public class EmailServiceImpl implements EmailService {
                               </td>
                             </tr>
                           </table>
-
-                          <!-- Info note -->
-                          <table width="100%%" cellpadding="0" cellspacing="0"
-                                 style="background-color:#EBF2FF;border-radius:10px;
-                                        border-left:4px solid #0F2D5E;margin-bottom:28px;">
-                            <tr>
-                              <td style="padding:16px 20px;">
-                                <p style="margin:0;color:#0F2D5E;font-size:13px;line-height:1.5;">
-                                  ℹ️ Your login credentials are managed by your system administrator.
-                                  If you have concerns about your account, please contact them directly.
-                                </p>
-                              </td>
-                            </tr>
-                          </table>
-
-                          <p style="margin:0 0 28px;color:#64748B;font-size:14px;line-height:1.6;">
-                            If you have any questions or need assistance, please contact your system administrator.
-                          </p>
-
-                          <p style="margin:0;color:#94A3B8;font-size:13px;">
-                            — The AttendMe Team
-                          </p>
+                          <p style="margin:0;color:#94A3B8;font-size:13px;">— The AttendMe Team</p>
                         </td>
                       </tr>
-
                       <!-- Footer -->
                       <tr>
                         <td style="background-color:#F8FAFC;padding:20px 40px;text-align:center;
@@ -163,7 +138,6 @@ public class EmailServiceImpl implements EmailService {
                           </p>
                         </td>
                       </tr>
-
                     </table>
                   </td>
                 </tr>
@@ -189,7 +163,6 @@ public class EmailServiceImpl implements EmailService {
                     <table width="600" cellpadding="0" cellspacing="0"
                            style="background-color:#ffffff;border-radius:16px;overflow:hidden;
                                   box-shadow:0 4px 20px rgba(0,0,0,0.08);">
-
                       <!-- Header -->
                       <tr>
                         <td style="background-color:#0F2D5E;padding:32px 40px;text-align:center;">
@@ -200,7 +173,6 @@ public class EmailServiceImpl implements EmailService {
                           </p>
                         </td>
                       </tr>
-
                       <!-- Body -->
                       <tr>
                         <td style="padding:40px;">
@@ -211,7 +183,6 @@ public class EmailServiceImpl implements EmailService {
                             Your system administrator has updated your AttendMe password.
                             Below are your updated login credentials.
                           </p>
-
                           <!-- Credentials Box -->
                           <table width="100%%" cellpadding="0" cellspacing="0"
                               style="background-color:#EBF2FF;border-radius:12px;
@@ -236,8 +207,7 @@ public class EmailServiceImpl implements EmailService {
                               </td>
                             </tr>
                           </table>
-
-                          <!-- Info note -->
+                          <!-- Warning note -->
                           <table width="100%%" cellpadding="0" cellspacing="0"
                                  style="background-color:#FEF3C7;border-radius:10px;
                                         border-left:4px solid #F59E0B;margin-bottom:28px;">
@@ -250,21 +220,13 @@ public class EmailServiceImpl implements EmailService {
                               </td>
                             </tr>
                           </table>
-
-                          <p style="margin:0 0 28px;color:#64748B;font-size:14px;line-height:1.6;">
-                            If you have any questions or need assistance, please contact your system administrator.
-                          </p>
-
-                          <p style="margin:0;color:#94A3B8;font-size:13px;">
-                            — The AttendMe Team
-                          </p>
+                          <p style="margin:0;color:#94A3B8;font-size:13px;">— The AttendMe Team</p>
                         </td>
                       </tr>
-
                       <!-- Footer -->
                       <tr>
                         <td style="background-color:#F8FAFC;padding:20px 40px;text-align:center;
-                                   border-top:1px solid #E2E8F0;">
+                                border-top:1px solid #E2E8F0;">
                           <p style="margin:0;color:#94A3B8;font-size:12px;">
                             This is an automated message. Please do not reply to this email.
                           </p>
@@ -273,7 +235,6 @@ public class EmailServiceImpl implements EmailService {
                           </p>
                         </td>
                       </tr>
-
                     </table>
                   </td>
                 </tr>
