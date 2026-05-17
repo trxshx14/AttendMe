@@ -23,7 +23,14 @@ const PERIOD_OPTIONS = [
 ];
 
 /* ── helpers ─────────────────────────────────────────── */
-const toISO = d => d.toISOString().split('T')[0];
+
+// ✅ FIXED: timezone-safe ISO date string (avoids UTC offset shifting the date)
+const toISO = (d) => {
+  const year  = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day   = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 const startOfWeek = (d) => {
   const day = new Date(d);
@@ -79,7 +86,7 @@ const TeacherReports = () => {
 
   // Filters
   const [selectedGrade, setSelectedGrade]     = useState('all');
-  const [selectedSection, setSelectedSection] = useState('all'); // classId or 'all'
+  const [selectedSection, setSelectedSection] = useState('all');
   const [period, setPeriod]                   = useState('this_week');
   const [customFrom, setCustomFrom]           = useState('');
   const [customTo, setCustomTo]               = useState('');
@@ -89,7 +96,7 @@ const TeacherReports = () => {
   const [showSectionDrop, setShowSectionDrop] = useState(false);
   const [showPeriodDrop, setShowPeriodDrop]   = useState(false);
 
-  // Report data (computed client-side)
+  // Report data
   const [summary, setSummary]         = useState(null);
   const [studentRows, setStudentRows] = useState([]);
   const [weeklyTrend, setWeeklyTrend] = useState([]);
@@ -103,7 +110,7 @@ const TeacherReports = () => {
 
   useEffect(() => { fetchClasses(); }, []);
 
-  /* ── Grade options (sorted numerically) ─────────────── */
+  /* ── Grade options ───────────────────────────────────── */
   const gradeOptions = (() => {
     const seen = new Set();
     const result = [];
@@ -119,18 +126,17 @@ const TeacherReports = () => {
     });
   })();
 
-  /* ── Section options for selected grade ─────────────── */
+  /* ── Section options ─────────────────────────────────── */
   const sectionOptions = selectedGrade !== 'all'
     ? classes.filter(c => parseClassObj(c).grade?.trim().toLowerCase() === selectedGrade?.trim().toLowerCase())
     : [];
 
-  /* ── Subject derived from selected section ───────────── */
   const selectedSectionObj = selectedSection !== 'all'
     ? classes.find(c => c.classId === selectedSection)
     : null;
   const derivedSubject = selectedSectionObj?.subject || null;
 
-  /* ── Which classes to query ──────────────────────────── */
+  /* ── Classes to query ────────────────────────────────── */
   const classesToQuery = (() => {
     if (selectedSection !== 'all') return classes.filter(c => c.classId === selectedSection);
     if (selectedGrade !== 'all')   return classes.filter(c => parseClassObj(c).grade?.trim().toLowerCase() === selectedGrade.trim().toLowerCase());
@@ -227,7 +233,6 @@ const TeacherReports = () => {
       setStudentRows(rows);
 
       /* ── Weekly trend ── */
-      // Group dates into weeks (Mon–Sun)
       const weekMap = {};
       dates.forEach(d => {
         const dt     = new Date(d + 'T00:00:00');
