@@ -25,6 +25,11 @@ import './App.css';
 const GOOGLE_CLIENT_ID = '119199394548-v3gge1t3omphebmr8p8d8mlcjrib2ubs.apps.googleusercontent.com';
 
 function App() {
+  // Pre-warm backend on app start
+  React.useEffect(() => {
+    fetch(`${process.env.REACT_APP_API_BASE}/api/users/ping`)
+      .catch(() => {});
+  }, []);
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <AuthProvider>
